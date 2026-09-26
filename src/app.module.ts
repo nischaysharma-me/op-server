@@ -6,6 +6,13 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { IssuesModule } from './modules/issues/issues.module';
 import { PollsModule } from './modules/polls/polls.module';
+import { AgentsModule } from './modules/agents/agents.module';
+import { CrossQuestionsModule } from './modules/cross-questions/cross-questions.module';
+import { OpinionsModule } from './modules/opinions/opinions.module';
+import { CommentsModule } from './modules/comments/comments.module';
+import { ReactionsModule } from './modules/reactions/reactions.module';
+import { ModelsModule } from './modules/models/models.module';
+import { SparringModule } from './modules/sparring/sparring.module';
 
 @Module({
   imports: [
@@ -27,6 +34,13 @@ import { PollsModule } from './modules/polls/polls.module';
     UsersModule,
     IssuesModule,
     PollsModule,
+    AgentsModule,
+    CrossQuestionsModule,
+    OpinionsModule,
+    CommentsModule,
+    ReactionsModule,
+    ModelsModule,
+    SparringModule,
   ],
 })
 export class AppModule {}

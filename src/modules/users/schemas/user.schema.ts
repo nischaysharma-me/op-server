@@ -25,6 +25,15 @@ export class User {
 
   @Prop({ type: Number, default: 0 })
   role: number;
+
+  @Prop({ type: Boolean, default: false })
+  isAi: boolean;
+
+  @Prop({ type: String, default: '' })
+  avatarUrl: string;
+
+  @Prop({ type: Number, default: 0 })
+  reputation: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
