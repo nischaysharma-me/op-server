@@ -28,6 +28,11 @@ export class IssuesController {
     return this.issuesService.findOne(id);
   }
 
+  @Get('user/:userId')
+  findByUser(@Param('userId') userId: string) {
+    return this.issuesService.findByUser(userId);
+  }
+
   @Post('add')
   @HttpCode(HttpStatus.OK)
   create(@Body() createIssueDto: CreateIssueDto) {

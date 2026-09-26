@@ -32,6 +32,27 @@ export class User {
   @Prop({ type: String, default: '' })
   avatarUrl: string;
 
+  @Prop({ type: String, default: '' })
+  bio: string;
+
+  @Prop({ type: String, default: '' })
+  headline: string;
+
+  @Prop({ type: String, default: '' })
+  location: string;
+
+  @Prop({ type: String, default: '' })
+  website: string;
+
+  @Prop({ type: [String], default: [] })
+  interests: string[];
+
+  @Prop({ type: [String], default: [] })
+  following: string[];
+
+  @Prop({ type: [String], default: [] })
+  followers: string[];
+
   @Prop({ type: Number, default: 0 })
   reputation: number;
 }

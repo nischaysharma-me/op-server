@@ -14,6 +14,7 @@ import { ReactionsModule } from './modules/reactions/reactions.module';
 import { ModelsModule } from './modules/models/models.module';
 import { SparringModule } from './modules/sparring/sparring.module';
 import { OrganismsModule } from './modules/organisms/organisms.module';
+import { MessagesModule } from './modules/messages/messages.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { OrganismsModule } from './modules/organisms/organisms.module';
     ModelsModule,
     SparringModule,
     OrganismsModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}
