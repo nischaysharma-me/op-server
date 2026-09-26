@@ -64,6 +64,7 @@ export class AgentMemoryService implements OnModuleInit {
   async onModuleInit() {
     await this.initPinecone();
     await this.seedDefaultMemories();
+    await this.syncUnindexedMemories();
   }
 
   private async initPinecone() {
@@ -74,7 +75,7 @@ export class AgentMemoryService implements OnModuleInit {
     const indexName =
       this.configService.get<string>('PINECONE_INDEX') ||
       process.env.PINECONE_INDEX ||
-      'opinion-polls-agents';
+      'opinions-poll-agents';
 
     this.pineconeIndexName = indexName;
 
@@ -130,6 +131,18 @@ export class AgentMemoryService implements OnModuleInit {
       timeAgo: this.formatTimeAgo(m.lastRecalledAt || (m as any).createdAt),
     }));
 
+    let totalVectors = memories.filter((m) => m.isIndexedInPinecone).length;
+    if (this.isPineconeReady && this.pineconeClient) {
+      try {
+        const stats = await this.pineconeClient.index(this.pineconeIndexName).describeIndexStats();
+        if (typeof stats?.totalRecordCount === 'number') {
+          totalVectors = stats.totalRecordCount;
+        }
+      } catch (err: any) {
+        // Fallback to local memory count
+      }
+    }
+
     return {
       agentCode,
       displayName: agent ? agent.displayName : agentCode,
@@ -139,7 +152,7 @@ export class AgentMemoryService implements OnModuleInit {
       pineconeStatus: {
         isConfigured: this.isPineconeReady,
         indexName: this.pineconeIndexName,
-        totalVectors: memories.filter((m) => m.isIndexedInPinecone).length,
+        totalVectors,
       },
       metrics: {
         totalMemories: memories.length,
@@ -253,27 +266,30 @@ export class AgentMemoryService implements OnModuleInit {
     // If Pinecone is active, generate embedding and push vector record
     if (this.isPineconeReady && this.pineconeClient) {
       try {
+        const textToEmbed = `${saved.title}. ${memoryData.content}`;
         const embeddings = await this.pineconeClient.inference.embed({
           model: 'multilingual-e5-large',
-          inputs: [memoryData.content],
+          inputs: [textToEmbed],
           parameters: { input_type: 'passage', truncate: 'END' },
         });
 
         if (embeddings && embeddings.data && embeddings.data.length > 0) {
           const index = this.pineconeClient.index(this.pineconeIndexName);
-          await index.upsert([
-            {
-              id: saved.pineconeId,
-              values: embeddings.data[0].values,
-              metadata: {
-                mongoId: (saved as any)._id.toString(),
-                agentCode,
-                title: saved.title,
-                memoryType: saved.memoryType,
-                importance: saved.importanceScore,
+          await index.upsert({
+            records: [
+              {
+                id: saved.pineconeId,
+                values: embeddings.data[0].values,
+                metadata: {
+                  mongoId: (saved as any)._id.toString(),
+                  agentCode,
+                  title: saved.title,
+                  memoryType: saved.memoryType,
+                  importance: saved.importanceScore,
+                },
               },
-            },
-          ]);
+            ],
+          });
           saved.isIndexedInPinecone = true;
           await saved.save();
         }
@@ -455,5 +471,71 @@ export class AgentMemoryService implements OnModuleInit {
     }
 
     this.logger.log('Foundational space memories successfully planted.');
+  }
+
+  /**
+   * Synchronize unindexed MongoDB memories to Pinecone vector store
+   */
+  async syncUnindexedMemories(): Promise<{ synced: number; total: number }> {
+    if (!this.isPineconeReady || !this.pineconeClient) {
+      return { synced: 0, total: 0 };
+    }
+
+    try {
+      const unindexed = await this.memoryModel.find({ isIndexedInPinecone: { $ne: true } }).exec();
+      if (unindexed.length === 0) {
+        this.logger.log('All agent memories are already synced with Pinecone vector index.');
+        return { synced: 0, total: 0 };
+      }
+
+      this.logger.log(
+        `Syncing ${unindexed.length} unindexed agent memories to Pinecone index "${this.pineconeIndexName}"...`
+      );
+      const index = this.pineconeClient.index(this.pineconeIndexName);
+
+      let syncedCount = 0;
+      for (const memory of unindexed) {
+        try {
+          const textToEmbed = `${memory.title}. ${memory.content}`;
+          const embeddings = await this.pineconeClient.inference.embed({
+            model: 'multilingual-e5-large',
+            inputs: [textToEmbed],
+            parameters: { input_type: 'passage', truncate: 'END' },
+          });
+
+          if (embeddings?.data?.[0]?.values) {
+            const pineconeId = memory.pineconeId || `mem_${memory.agentCode.toLowerCase()}_${memory._id}`;
+            await index.upsert({
+              records: [
+                {
+                  id: pineconeId,
+                  values: embeddings.data[0].values,
+                  metadata: {
+                    mongoId: (memory as any)._id.toString(),
+                    agentCode: memory.agentCode,
+                    title: memory.title,
+                    memoryType: memory.memoryType,
+                    importance: memory.importanceScore,
+                  },
+                },
+              ],
+            });
+
+            memory.pineconeId = pineconeId;
+            memory.isIndexedInPinecone = true;
+            await memory.save();
+            syncedCount++;
+          }
+        } catch (innerErr: any) {
+          this.logger.warn(`Failed to sync memory "${memory.title}" to Pinecone: ${innerErr.message}`);
+        }
+      }
+
+      this.logger.log(`Successfully synced ${syncedCount}/${unindexed.length} memories to Pinecone vector index.`);
+      return { synced: syncedCount, total: unindexed.length };
+    } catch (err: any) {
+      this.logger.error(`Error during Pinecone memory sync: ${err.message}`);
+      return { synced: 0, total: 0 };
+    }
   }
 }
