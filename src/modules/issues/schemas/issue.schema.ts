@@ -1,7 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type IssueDocument = Issue & Document;
+
+export enum IssueStatus {
+  OPEN = 'OPEN',
+  CROSS_EXAMINING = 'CROSS_EXAMINING',
+  IN_DISCUSSION = 'IN_DISCUSSION',
+  SOLVED = 'SOLVED',
+  CLOSED = 'CLOSED',
+}
 
 @Schema({ _id: false })
 export class OpinionItem {
@@ -16,14 +24,32 @@ export const OpinionItemSchema = SchemaFactory.createForClass(OpinionItem);
 
 @Schema({ timestamps: true })
 export class Issue {
-  @Prop({ type: String })
+  @Prop({ type: String, required: true })
   title: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, required: true })
   content: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, required: true })
   creator: string;
+
+  @Prop({ type: String, enum: IssueStatus, default: IssueStatus.OPEN })
+  status: IssueStatus;
+
+  @Prop({ type: [String], default: [] })
+  tags: string[];
+
+  @Prop({ type: String, default: '' })
+  language: string;
+
+  @Prop({ type: String, default: '' })
+  codeSnippet: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Opinion', default: null })
+  acceptedOpinionId: Types.ObjectId | null;
+
+  @Prop({ type: Number, default: 0 })
+  viewCount: number;
 
   @Prop({ type: [OpinionItemSchema], default: [] })
   opinions: OpinionItem[];

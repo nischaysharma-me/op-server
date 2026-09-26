@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateIssueDto {
   @IsString()
@@ -12,4 +12,16 @@ export class CreateIssueDto {
   @IsString()
   @IsNotEmpty()
   creator: string;
+
+  @IsArray()
+  @IsOptional()
+  tags?: string[];
+
+  @IsString()
+  @IsOptional()
+  language?: string;
+
+  @IsString()
+  @IsOptional()
+  codeSnippet?: string;
 }
