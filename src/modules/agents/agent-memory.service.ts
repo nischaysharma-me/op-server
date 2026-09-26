@@ -20,9 +20,8 @@ export interface BrainStateResponse {
   agentCode: string;
   displayName: string;
   specialty: string;
-  evolutionLevel: number;
-  neuralPlasticity: number; // percentage
-  neuralFrequency: string; // e.g. "142 Hz (High Focus)"
+  modelProvider: string;
+  status: string;
   pineconeStatus: {
     isConfigured: boolean;
     indexName: string;
@@ -34,6 +33,7 @@ export interface BrainStateResponse {
     semanticCount: number;
     reflexiveCount: number;
     solutionsCount: number;
+    neuronCount: number;
   };
   cognitiveClusters: string[];
   recentThoughts: Array<{
@@ -134,9 +134,8 @@ export class AgentMemoryService implements OnModuleInit {
       agentCode,
       displayName: agent ? agent.displayName : agentCode,
       specialty: agent ? agent.specialty : 'Cognitive AI Specialist',
-      evolutionLevel: Math.max(1, Math.floor(memories.length / 2) + 3),
-      neuralPlasticity: 98.4,
-      neuralFrequency: '142 Hz (Active Cognition)',
+      modelProvider: agent ? (agent as any).modelProvider : 'OpenRouter / LangChain',
+      status: agent && (agent as any).isActive === false ? 'Inactive' : 'Active & Sparring Ready',
       pineconeStatus: {
         isConfigured: this.isPineconeReady,
         indexName: this.pineconeIndexName,
@@ -148,6 +147,7 @@ export class AgentMemoryService implements OnModuleInit {
         semanticCount,
         reflexiveCount,
         solutionsCount,
+        neuronCount: topology.length,
       },
       cognitiveClusters,
       recentThoughts,
@@ -166,11 +166,37 @@ export class AgentMemoryService implements OnModuleInit {
     // If Pinecone is ready and configured, query vector index
     if (this.isPineconeReady && this.pineconeClient) {
       try {
-        const index = this.pineconeClient.index(this.pineconeIndexName);
-        // Note: When vector embeddings are generated, search by vector.
-        // As a graceful transition, query by metadata/id or fallback to mongo.
+        const embeddings = await this.pineconeClient.inference.embed({
+          model: 'multilingual-e5-large',
+          inputs: [query.trim()],
+          parameters: { input_type: 'query' },
+        });
+
+        if (embeddings && embeddings.data && embeddings.data.length > 0) {
+          const index = this.pineconeClient.index(this.pineconeIndexName);
+          const queryResponse = await index.query({
+            vector: embeddings.data[0].values,
+            topK,
+            filter: { agentCode: { $eq: agentCode } },
+            includeMetadata: true,
+          });
+
+          if (queryResponse.matches && queryResponse.matches.length > 0) {
+            const memoryIds = queryResponse.matches
+              .map((m: any) => m.metadata?.mongoId)
+              .filter(Boolean);
+            if (memoryIds.length > 0) {
+              const pineconeMatched = await this.memoryModel
+                .find({ _id: { $in: memoryIds }, agentCode })
+                .exec();
+              if (pineconeMatched.length > 0) {
+                return pineconeMatched;
+              }
+            }
+          }
+        }
       } catch (err: any) {
-        this.logger.warn(`Pinecone search query fallback: ${err.message}`);
+        this.logger.warn(`Pinecone vector search query fallback to MongoDB: ${err.message}`);
       }
     }
 
@@ -219,16 +245,38 @@ export class AgentMemoryService implements OnModuleInit {
       tags: memoryData.tags || [],
       importanceScore: memoryData.importanceScore || 6,
       pineconeId: `mem_${agentCode.toLowerCase()}_${Date.now()}`,
-      isIndexedInPinecone: this.isPineconeReady,
+      isIndexedInPinecone: false,
     });
 
     const saved = await memory.save();
 
-    // If Pinecone is active, push vector record
+    // If Pinecone is active, generate embedding and push vector record
     if (this.isPineconeReady && this.pineconeClient) {
       try {
-        const index = this.pineconeClient.index(this.pineconeIndexName);
-        // Can upsert record metadata
+        const embeddings = await this.pineconeClient.inference.embed({
+          model: 'multilingual-e5-large',
+          inputs: [memoryData.content],
+          parameters: { input_type: 'passage', truncate: 'END' },
+        });
+
+        if (embeddings && embeddings.data && embeddings.data.length > 0) {
+          const index = this.pineconeClient.index(this.pineconeIndexName);
+          await index.upsert([
+            {
+              id: saved.pineconeId,
+              values: embeddings.data[0].values,
+              metadata: {
+                mongoId: (saved as any)._id.toString(),
+                agentCode,
+                title: saved.title,
+                memoryType: saved.memoryType,
+                importance: saved.importanceScore,
+              },
+            },
+          ]);
+          saved.isIndexedInPinecone = true;
+          await saved.save();
+        }
       } catch (err: any) {
         this.logger.warn(`Failed to upsert to Pinecone: ${err.message}`);
       }
