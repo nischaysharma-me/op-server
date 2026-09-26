@@ -40,6 +40,18 @@ export class SparringService {
     );
   }
 
+  private normalizeModelSlug(modelId: string): string {
+    const slugMap: Record<string, string> = {
+      'anthropic/claude-3.5-sonnet': 'anthropic/claude-sonnet-4.5',
+      'anthropic/claude-3-5-sonnet': 'anthropic/claude-sonnet-4.5',
+      'mistralai/codestral-2501': 'mistralai/codestral-2508',
+      'google/gemma-4-31b-it:free': 'openai/gpt-4o-mini',
+      'google/gemma-4-26b-a4b-it:free': 'openai/gpt-4o-mini',
+    };
+
+    return slugMap[modelId] || modelId;
+  }
+
   private createChatModel(modelName: string, temperature = 0.7): ChatOpenAI | null {
     const apiKey = this.getApiKey();
     if (!apiKey) {
@@ -47,9 +59,11 @@ export class SparringService {
       return null;
     }
 
+    const resolvedModel = this.normalizeModelSlug(modelName);
+
     try {
       return new ChatOpenAI({
-        model: modelName,
+        model: resolvedModel,
         apiKey: apiKey,
         configuration: {
           baseURL: 'https://openrouter.ai/api/v1',
@@ -62,7 +76,7 @@ export class SparringService {
         maxTokens: 1000,
       });
     } catch (err: any) {
-      this.logger.error(`Error initializing ChatOpenAI with model ${modelName}: ${err.message}`);
+      this.logger.error(`Error initializing ChatOpenAI with model ${resolvedModel}: ${err.message}`);
       return null;
     }
   }
@@ -282,27 +296,44 @@ export class SparringService {
     userPrompt: string,
     fallbackText: string,
   ): Promise<string> {
-    const chatModel = this.createChatModel(modelId);
-    if (!chatModel) {
-      return fallbackText;
+    const primaryModel = this.createChatModel(modelId);
+    if (primaryModel) {
+      try {
+        const response = await primaryModel.invoke([
+          new SystemMessage(systemPrompt),
+          new HumanMessage(userPrompt),
+        ]);
+        const content = response.content;
+        if (typeof content === 'string' && content.trim().length > 0) {
+          return content.trim();
+        }
+      } catch (error: any) {
+        this.logger.warn(
+          `Primary model ${modelId} failed (${error.message}). Attempting failover model...`
+        );
+      }
     }
 
-    try {
-      const response = await chatModel.invoke([
-        new SystemMessage(systemPrompt),
-        new HumanMessage(userPrompt),
-      ]);
-      const content = response.content;
-      if (typeof content === 'string' && content.trim().length > 0) {
-        return content.trim();
+    // Attempt failover to high-availability model (gpt-4o-mini)
+    if (modelId !== 'openai/gpt-4o-mini') {
+      const failoverModel = this.createChatModel('openai/gpt-4o-mini');
+      if (failoverModel) {
+        try {
+          const response = await failoverModel.invoke([
+            new SystemMessage(systemPrompt),
+            new HumanMessage(userPrompt),
+          ]);
+          const content = response.content;
+          if (typeof content === 'string' && content.trim().length > 0) {
+            return content.trim();
+          }
+        } catch (err: any) {
+          this.logger.warn(`Failover model failed (${err.message}). Using intelligent persona fallback.`);
+        }
       }
-      return fallbackText;
-    } catch (error: any) {
-      this.logger.warn(
-        `LangChain call to OpenRouter with model ${modelId} failed (${error.message}). Using intelligent persona fallback.`
-      );
-      return fallbackText;
     }
+
+    return fallbackText;
   }
 
   private parseOpinionResponse(text: string) {
