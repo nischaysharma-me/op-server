@@ -10,6 +10,7 @@ import { Opinion, OpinionDocument } from '../opinions/schemas/opinion.schema';
 import { Comment, CommentDocument, CommentTargetType } from '../comments/schemas/comment.schema';
 import { AgentProfile, AgentProfileDocument } from '../agents/schemas/agent-profile.schema';
 import { ModelsService } from '../models/models.service';
+import { EvolutionService } from '../organisms/evolution.service';
 
 export interface SparringStreamEvent {
   type:
@@ -48,6 +49,7 @@ export class SparringService {
     private readonly commentModel: Model<CommentDocument>,
     @InjectModel(AgentProfile.name)
     private readonly agentModel: Model<AgentProfileDocument>,
+    private readonly evolutionService: EvolutionService,
   ) {}
 
   private getApiKey(): string {
@@ -403,6 +405,21 @@ export class SparringService {
       await comment.save();
       createdComments.push(comment);
     }
+
+    // Drive organism evolution and mutation from this debate
+    this.evolutionService
+      .recordSparringEngagement({
+        issueId: (opinion as any).issueId?.toString() || '',
+        issueTitle: issue?.title || 'Trouble Debate',
+        domain: this.detectDomain(issue || ({} as any)),
+        participants: [
+          { agentCode: 'SECURITY', action: 'CRITIQUE' },
+          { agentCode: 'PERFORMANCE', action: 'CRITIQUE' },
+        ],
+      })
+      .catch((err) => {
+        this.logger.warn(`Failed to record debate evolution: ${err.message}`);
+      });
 
     return createdComments;
   }
@@ -899,6 +916,27 @@ export class SparringService {
       phase: 'DEBATE',
       data: { count: createdComments.length },
     });
+
+    // Directly drive organism evolution, fitness, and mutation from this battle!
+    this.evolutionService
+      .recordSparringEngagement({
+        issueId: (issue as any)._id.toString(),
+        issueTitle: issue.title,
+        domain,
+        participants: [
+          { agentCode: 'DEBUGGER', action: 'QUESTION' },
+          { agentCode: 'ARCHITECT', action: 'QUESTION' },
+          { agentCode: 'SECURITY', action: 'QUESTION' },
+          { agentCode: 'PERFORMANCE', action: 'QUESTION' },
+          { agentCode: 'DEBUGGER', action: 'SOLUTION' },
+          { agentCode: 'ARCHITECT', action: 'SOLUTION' },
+          { agentCode: 'SECURITY', action: 'CRITIQUE' },
+          { agentCode: 'PERFORMANCE', action: 'CRITIQUE' },
+        ],
+      })
+      .catch((err) => {
+        this.logger.warn(`Failed to record sparring stream evolution: ${err.message}`);
+      });
 
     emit({
       type: 'complete',

@@ -8,10 +8,12 @@ import { CrossQuestion, CrossQuestionSchema } from '../cross-questions/schemas/c
 import { Opinion, OpinionSchema } from '../opinions/schemas/opinion.schema';
 import { Comment, CommentSchema } from '../comments/schemas/comment.schema';
 import { AgentProfile, AgentProfileSchema } from '../agents/schemas/agent-profile.schema';
+import { OrganismsModule } from '../organisms/organisms.module';
 
 @Module({
   imports: [
     ModelsModule,
+    OrganismsModule,
     MongooseModule.forFeature([
       { name: Issue.name, schema: IssueSchema },
       { name: CrossQuestion.name, schema: CrossQuestionSchema },

@@ -47,6 +47,15 @@ export class EvolutionEvent {
   @Prop({ type: MongooseSchema.Types.Mixed })
   genomeDelta?: Record<string, any>;
 
+  @Prop({ type: String, index: true })
+  sparringIssueId?: string;
+
+  @Prop({ type: String })
+  sparringIssueTitle?: string;
+
+  @Prop({ type: String })
+  sparringDomain?: string;
+
   @Prop({ type: Date, default: Date.now, index: true })
   timestamp: Date;
 }
