@@ -36,6 +36,20 @@ export class IssuesService {
     }
   }
 
+  async findByUser(userId: string): Promise<{ issues: Issue[] }> {
+    try {
+      const issues = await this.issueModel
+        .find({
+          $or: [{ creator: userId }, { creator: { $regex: new RegExp(`^${userId}$`, 'i') } }],
+        })
+        .sort({ createdAt: -1 })
+        .exec();
+      return { issues };
+    } catch (error) {
+      throw new NotFoundException([]);
+    }
+  }
+
   async create(createIssueDto: CreateIssueDto): Promise<{ issue: Issue }> {
     try {
       const issue = new this.issueModel(createIssueDto);
