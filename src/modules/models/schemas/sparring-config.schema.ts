@@ -11,10 +11,10 @@ export class SparringConfig {
   @Prop({
     type: Object,
     default: {
-      DEBUGGER: 'google/gemma-4-31b-it:free',
-      ARCHITECT: 'anthropic/claude-3.5-sonnet',
-      SECURITY: 'meta-llama/llama-3.1-70b-instruct',
-      PERFORMANCE: 'mistralai/codestral-2501',
+      DEBUGGER: 'openai/gpt-4o-mini',
+      ARCHITECT: 'meta-llama/llama-3.3-70b-instruct',
+      SECURITY: 'deepseek/deepseek-chat',
+      PERFORMANCE: 'mistralai/codestral-2508',
     },
   })
   agentModelMap: Record<string, string>;
@@ -22,17 +22,17 @@ export class SparringConfig {
   @Prop({
     type: [String],
     default: [
-      'google/gemma-4-31b-it:free',
-      'openai/gpt-4o',
-      'anthropic/claude-3.5-sonnet',
-      'deepseek/deepseek-chat',
+      'openai/gpt-4o-mini',
       'meta-llama/llama-3.3-70b-instruct',
-      'mistralai/codestral-2501',
+      'deepseek/deepseek-chat',
+      'mistralai/codestral-2508',
+      'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+      'openai/gpt-4o',
     ],
   })
   activeSparringModels: string[];
 
-  @Prop({ type: String, default: 'google/gemma-4-31b-it:free' })
+  @Prop({ type: String, default: 'openai/gpt-4o-mini' })
   defaultModel: string;
 }
 
