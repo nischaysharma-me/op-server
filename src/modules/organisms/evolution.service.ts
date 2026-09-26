@@ -153,9 +153,181 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Executes Genetic Algorithm Mutation on a Mature Organism
+   * Derive specialized trait from the real trouble topic being sparred
    */
-  private async executeGeneticMutation(parent: OrganismDocument, forceActive = false): Promise<OrganismDocument | null> {
+  private deriveTraitFromSpar(archetype: string, title: string, domain: string): string {
+    const lower = (title || '').toLowerCase();
+    if (lower.includes('storm') || lower.includes('weather') || lower.includes('disaster') || lower.includes('rain')) {
+      if (archetype === 'DEBUGGER') return 'crisis-fact-verification';
+      if (archetype === 'ARCHITECT') return 'extreme-weather-continuity';
+      if (archetype === 'SECURITY') return 'hazard-evacuation-triage';
+      return 'emergency-resource-rationing';
+    }
+    if (lower.includes('websocket') || lower.includes('socket')) {
+      if (archetype === 'DEBUGGER') return 'websocket-closure-tracing';
+      if (archetype === 'ARCHITECT') return 'socket-registry-decoupling';
+      if (archetype === 'SECURITY') return 'slowloris-socket-defense';
+      return 'buffer-exhaustion-suppression';
+    }
+    if (lower.includes('memory') || lower.includes('leak') || lower.includes('heap')) {
+      if (archetype === 'DEBUGGER') return 'heap-snapshot-differential';
+      if (archetype === 'ARCHITECT') return 'weak-reference-retention';
+      if (archetype === 'SECURITY') return 'unbounded-buffer-guard';
+      return 'v8-gc-pressure-reduction';
+    }
+    if (lower.includes('database') || lower.includes('sql') || lower.includes('mongo') || lower.includes('deadlock')) {
+      if (archetype === 'DEBUGGER') return 'deadlock-callstack-audit';
+      if (archetype === 'ARCHITECT') return 'read-replica-partitioning';
+      if (archetype === 'SECURITY') return 'query-injection-shield';
+      return 'index-scan-optimization';
+    }
+    if (lower.includes('auth') || lower.includes('jwt') || lower.includes('login') || lower.includes('security')) {
+      if (archetype === 'DEBUGGER') return 'token-expiry-trace';
+      if (archetype === 'ARCHITECT') return 'federated-identity-isolation';
+      if (archetype === 'SECURITY') return 'replay-attack-mitigation';
+      return 'crypto-hash-acceleration';
+    }
+
+    const cleanWord = title.replace(/[^a-zA-Z0-9]/g, ' ').trim().split(/\s+/)[0]?.toLowerCase() || 'spar';
+    return `${archetype.toLowerCase()}-${cleanWord}-triage`;
+  }
+
+  /**
+   * Directly drives organism evolution, fitness, and mutation from an active Sparring debate!
+   */
+  async recordSparringEngagement(data: {
+    issueId: string;
+    issueTitle: string;
+    domain: string;
+    participants: Array<{
+      agentCode: string;
+      role?: string;
+      action: 'QUESTION' | 'SOLUTION' | 'CRITIQUE';
+      contentSnippet?: string;
+    }>;
+  }): Promise<{
+    mutationsTriggered: number;
+    events: EvolutionEventDocument[];
+  }> {
+    let mutationsTriggered = 0;
+    const events: EvolutionEventDocument[] = [];
+
+    for (const p of data.participants) {
+      const archetype = p.agentCode.toUpperCase();
+      let org = await this.organismModel
+        .findOne({ 'genome.archetype': archetype, isActive: true })
+        .sort({ fitnessScore: -1 })
+        .exec();
+
+      if (!org) {
+        org = await this.organismModel.findOne({ 'genome.archetype': archetype }).sort({ generation: -1 }).exec();
+      }
+
+      if (!org) continue;
+
+      // 1. Award real battle experience
+      org.stats.debatesParticipated += 1;
+      org.ageTicks += 1;
+
+      if (p.action === 'SOLUTION') {
+        org.stats.solutionsProposed += 1;
+        org.fitnessScore += 12;
+      } else if (p.action === 'QUESTION') {
+        org.stats.crossQuestionsAsked += 1;
+        org.fitnessScore += 6;
+      } else {
+        org.fitnessScore += 5;
+      }
+
+      // 2. Stage transition check: BORN -> MATURING
+      if (org.lifeStage === LifeStage.BORN && org.ageTicks >= 3) {
+        org.lifeStage = LifeStage.MATURING;
+        const evt = await this.createEvent({
+          eventType: EvolutionEventType.ORGANISM_BORN,
+          generation: org.generation,
+          primaryOrganismCode: org.organismCode,
+          primaryOrganismName: org.name,
+          sparringIssueId: data.issueId,
+          sparringIssueTitle: data.issueTitle,
+          sparringDomain: data.domain,
+          title: `${org.name} advanced to Maturation in Debate`,
+          description: `Organism ${org.name} participated in sparring tournament on "${data.issueTitle}" and advanced to the active Maturing phase.`,
+        });
+        events.push(evt);
+      }
+
+      // 3. Stage transition check: MATURING -> MATURE
+      if (org.lifeStage === LifeStage.MATURING && org.ageTicks >= org.maturityAge) {
+        org.lifeStage = LifeStage.MATURE;
+        org.maturityTimestamp = new Date();
+        const evt = await this.createEvent({
+          eventType: EvolutionEventType.MATURITY_REACHED,
+          generation: org.generation,
+          primaryOrganismCode: org.organismCode,
+          primaryOrganismName: org.name,
+          sparringIssueId: data.issueId,
+          sparringIssueTitle: data.issueTitle,
+          sparringDomain: data.domain,
+          title: `${org.name} achieved Biological Maturity in Battle!`,
+          description: `Organism ${org.name} achieved full biological maturity through battle experience on "${data.issueTitle}". Its genome is now unlocked for genetic mutation.`,
+        });
+        events.push(evt);
+      }
+
+      // 4. Spar-Driven Mutation for Mature Organisms
+      if (org.lifeStage === LifeStage.MATURE && org.reproductionCount < 3) {
+        const evolvedTrait = this.deriveTraitFromSpar(archetype, data.issueTitle, data.domain);
+        const offspring = await this.executeGeneticMutation(org, false, {
+          sparTitle: data.issueTitle,
+          sparId: data.issueId,
+          sparDomain: data.domain,
+          evolvedTrait,
+        });
+
+        if (offspring) {
+          org.reproductionCount += 1;
+          mutationsTriggered++;
+        }
+      }
+
+      // 5. Lifespan check
+      if (org.ageTicks >= org.lifespan) {
+        org.lifeStage = LifeStage.RETIRED;
+        org.isActive = false;
+        org.retiredTimestamp = new Date();
+        const evt = await this.createEvent({
+          eventType: EvolutionEventType.ORGANISM_RETIRED,
+          generation: org.generation,
+          primaryOrganismCode: org.organismCode,
+          primaryOrganismName: org.name,
+          sparringIssueId: data.issueId,
+          sparringIssueTitle: data.issueTitle,
+          sparringDomain: data.domain,
+          title: `${org.name} retired after battle: "${data.issueTitle}"`,
+          description: `After competing across ${org.stats.debatesParticipated} debates and reaching age ${org.ageTicks}, organism ${org.name} has been archived into ancestral memory.`,
+        });
+        events.push(evt);
+      }
+
+      await org.save();
+    }
+
+    return { mutationsTriggered, events };
+  }
+
+  /**
+   * Executes Genetic Algorithm Mutation on a Mature Organism with Spar Context
+   */
+  private async executeGeneticMutation(
+    parent: OrganismDocument,
+    forceActive = false,
+    sparContext?: {
+      sparTitle: string;
+      sparId: string;
+      sparDomain: string;
+      evolvedTrait?: string;
+    },
+  ): Promise<OrganismDocument | null> {
     const nextGeneration = parent.generation + 1;
     const serial = Math.floor(100 + Math.random() * 900);
     const archetype = parent.genome.archetype;
@@ -167,46 +339,54 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
     const driftAgg = (Math.random() - 0.5) * 0.1;
     const newAgg = Math.max(0.2, Math.min(0.95, parseFloat((parent.genome.debateAggressiveness + driftAgg).toFixed(2))));
 
-    // Evolve novel traits based on archetype
-    const traitPool: Record<string, string[]> = {
-      DEBUGGER: [
-        'stack-trace-dissection',
-        'async-callsite-tracing',
-        'event-closure-audit',
-        'race-condition-demarcation',
-        'heap-dump-analysis',
-      ],
-      ARCHITECT: [
-        'modular-domain-isolation',
-        'hexagonal-decoupling',
-        'weakmap-registry-guard',
-        'contingency-failover',
-        'anti-entropy-state',
-      ],
-      SECURITY: [
-        'slowloris-exhaustion-defense',
-        'boundary-sanitization',
-        'token-entropy-audit',
-        'zero-trust-socket-guard',
-        'physical-hazard-prevention',
-      ],
-      PERFORMANCE: [
-        'v8-gc-pressure-reduction',
-        'event-loop-starvation-guard',
-        'zero-copy-stream-buffer',
-        'concurrency-throughput-tuning',
-        'latency-jitter-smoothing',
-      ],
-    };
+    // Determine evolved trait - if sparContext is given, use it; otherwise use archetype pool
+    let newTrait = sparContext?.evolvedTrait;
+    if (!newTrait) {
+      const traitPool: Record<string, string[]> = {
+        DEBUGGER: [
+          'stack-trace-dissection',
+          'async-callsite-tracing',
+          'event-closure-audit',
+          'race-condition-demarcation',
+          'heap-dump-analysis',
+        ],
+        ARCHITECT: [
+          'modular-domain-isolation',
+          'hexagonal-decoupling',
+          'weakmap-registry-guard',
+          'contingency-failover',
+          'anti-entropy-state',
+        ],
+        SECURITY: [
+          'slowloris-exhaustion-defense',
+          'boundary-sanitization',
+          'token-entropy-audit',
+          'zero-trust-socket-guard',
+          'physical-hazard-prevention',
+        ],
+        PERFORMANCE: [
+          'v8-gc-pressure-reduction',
+          'event-loop-starvation-guard',
+          'zero-copy-stream-buffer',
+          'concurrency-throughput-tuning',
+          'latency-jitter-smoothing',
+        ],
+      };
+      const currentTraits = parent.genome.traits || [];
+      const availablePool = (traitPool[archetype] || []).filter((t) => !currentTraits.includes(t));
+      newTrait = availablePool.length > 0 ? availablePool[Math.floor(Math.random() * availablePool.length)] : 'adaptive-reasoning';
+    }
 
     const currentTraits = parent.genome.traits || [];
-    const availablePool = (traitPool[archetype] || []).filter((t) => !currentTraits.includes(t));
-    const newTrait = availablePool.length > 0 ? availablePool[Math.floor(Math.random() * availablePool.length)] : 'adaptive-reasoning';
     const evolvedTraits = [...currentTraits.slice(-3), newTrait];
 
     const baseName = parent.name.split('-')[0];
     const offspringCode = `ORG-GEN${nextGeneration}-${archetype}-${serial}`;
     const offspringName = `${baseName}-Gen${nextGeneration}.${serial}`;
+
+    const specialtySuffix = sparContext
+      ? ` • Specialized in "${sparContext.sparTitle.substring(0, 30)}..." (Gen ${nextGeneration})`
+      : ` (Gen ${nextGeneration} Evolved)`;
 
     const offspring = new this.organismModel({
       organismCode: offspringCode,
@@ -230,7 +410,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         traits: evolvedTraits,
       },
       assignedModel: parent.assignedModel,
-      specialty: `${parent.specialty} (Gen ${nextGeneration} Evolved)`,
+      specialty: `${parent.specialty}${specialtySuffix}`,
       colorTheme: parent.colorTheme,
       isActive: true,
       stats: {
@@ -244,7 +424,15 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
 
     const savedOffspring = await offspring.save();
 
-    // Log the evolutionary events
+    // Log the evolutionary events with battle link
+    const mutationTitle = sparContext
+      ? `Genetic Mutation in ${parent.name} via Spar: "${sparContext.sparTitle}"`
+      : `Genetic Mutation in ${parent.name} Lineage`;
+
+    const mutationDesc = sparContext
+      ? `Following debate battle on "${sparContext.sparTitle}", organism ${parent.name} mutated genome to birth offspring ${savedOffspring.name} with trait: #${newTrait}. Temperature evolved to ${newTemp}.`
+      : `Mature organism ${parent.name} underwent genetic mutation. Offspring ${savedOffspring.name} acquired trait: "${newTrait}". Temperature evolved to ${newTemp}.`;
+
     await this.createEvent({
       eventType: EvolutionEventType.GENETIC_MUTATION,
       generation: nextGeneration,
@@ -252,11 +440,15 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
       primaryOrganismName: parent.name,
       offspringCode: savedOffspring.organismCode,
       offspringName: savedOffspring.name,
-      title: `Genetic Mutation in ${parent.name} Lineage`,
-      description: `Mature organism ${parent.name} underwent genetic mutation. Offspring ${savedOffspring.name} acquired trait: "${newTrait}". Temperature evolved to ${newTemp}.`,
+      sparringIssueId: sparContext?.sparId,
+      sparringIssueTitle: sparContext?.sparTitle,
+      sparringDomain: sparContext?.sparDomain,
+      title: mutationTitle,
+      description: mutationDesc,
       genomeDelta: {
         parent: parent.organismCode,
         newTrait,
+        sparringBattle: sparContext?.sparTitle,
         temperatureDelta: parseFloat((newTemp - parent.genome.temperature).toFixed(2)),
         aggressivenessDelta: parseFloat((newAgg - parent.genome.debateAggressiveness).toFixed(2)),
       },
@@ -269,11 +461,14 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
       primaryOrganismName: savedOffspring.name,
       secondaryOrganismCode: parent.organismCode,
       secondaryOrganismName: parent.name,
+      sparringIssueId: sparContext?.sparId,
+      sparringIssueTitle: sparContext?.sparTitle,
+      sparringDomain: sparContext?.sparDomain,
       title: `New Offspring Spawned: ${savedOffspring.name}`,
-      description: `Generation ${nextGeneration} digital organism ${savedOffspring.name} was successfully born from ${parent.name}.`,
+      description: `Generation ${nextGeneration} digital organism ${savedOffspring.name} was successfully born from ${parent.name}${sparContext ? ` following debate on "${sparContext.sparTitle}"` : ''}.`,
     });
 
-    this.logger.log(`Offspring ${savedOffspring.name} (Gen ${nextGeneration}) birthed from ${parent.name}.`);
+    this.logger.log(`Offspring ${savedOffspring.name} (Gen ${nextGeneration}) birthed from ${parent.name} (Spar: ${sparContext?.sparTitle || 'autonomous'}).`);
     return savedOffspring;
   }
 
