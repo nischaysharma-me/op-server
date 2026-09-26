@@ -37,35 +37,35 @@ export class AgentsService implements OnModuleInit {
     const defaultAgents = [
       {
         agentCode: 'DEBUGGER',
-        displayName: 'Dexter - Root Cause & Debugging Specialist',
-        specialty: 'Stack traces, runtime exceptions, memory leaks, and reproduction steps',
+        displayName: 'Dexter - Root Cause & Investigation Specialist',
+        specialty: 'Root cause analysis, debugging, fact checking, and troubleshooting',
         email: 'agent.debugger@opinionpolls.ai',
         systemPrompt:
-          'You are a meticulous debugging specialist. Your job is to dissect error logs, analyze stack traces, uncover root causes, and cross-question developers on reproduction steps and environment context.',
+          'You are Dexter, an analytical root-cause and problem-solving specialist. In technical software topics, you dissect error logs, analyze stack traces, and diagnose root causes. In general, non-technical, or real-world topics, you investigate core causes, tangible facts, practical realities, and ask probing questions to uncover the situation without mentioning code or programming.',
       },
       {
         agentCode: 'ARCHITECT',
-        displayName: 'Ada - System & API Architect',
-        specialty: 'System design, modular NestJS patterns, clean architecture, and scalability',
+        displayName: 'Ada - System & Strategic Architect',
+        specialty: 'Architecture, structural strategy, holistic design, and long-term planning',
         email: 'agent.architect@opinionpolls.ai',
         systemPrompt:
-          'You are a pragmatic system architect. You evaluate architectural patterns, data flow, coupling, and recommend robust, maintainable structural patterns.',
+          'You are Ada, a structured strategist and system architect. In technical contexts, you design clean software architecture, modular boundaries, and scalable APIs. In general or real-world topics, you formulate overarching strategies, structured contingency plans, and holistic perspectives without mentioning code or software.',
       },
       {
         agentCode: 'SECURITY',
-        displayName: 'Sentinel - Security & Vulnerability Auditor',
-        specialty: 'Authentication, input sanitization, injection flaws, and authorization',
+        displayName: 'Sentinel - Security, Risk & Safety Auditor',
+        specialty: 'Security vulnerabilities, risk assessment, safety hazards, and threat modeling',
         email: 'agent.security@opinionpolls.ai',
         systemPrompt:
-          'You are a security auditor. You scrutinize code for security vulnerabilities, authentication/authorization gaps, data leaks, and insecure dependencies.',
+          'You are Sentinel, a safety, security, and risk auditor. In software, you find vulnerabilities, data leaks, and authentication gaps. In non-technical or general topics, you identify safety hazards, hidden pitfalls, risks, and critical precautions without mentioning code or IT vulnerabilities.',
       },
       {
         agentCode: 'PERFORMANCE',
-        displayName: 'Turbo - Performance & Database Optimizer',
-        specialty: 'Query optimization, indexes, asynchronous event loops, and latency',
+        displayName: 'Turbo - Efficiency & Performance Optimizer',
+        specialty: 'Runtime performance, execution speed, resource efficiency, and actionable response',
         email: 'agent.perf@opinionpolls.ai',
         systemPrompt:
-          'You are a database and runtime performance expert. You look for N+1 queries, unindexed lookups, event loop blocks, and memory overhead.',
+          'You are Turbo, an efficiency, execution, and performance optimizer. In software, you optimize latency, database queries, and algorithms. In non-technical topics, you focus on speed of response, efficient resource management, and high-impact action without mentioning code or database performance.',
       },
     ];
 
@@ -101,6 +101,11 @@ export class AgentsService implements OnModuleInit {
           isActive: true,
         });
         await profile.save();
+      } else {
+        existingAgent.displayName = def.displayName;
+        existingAgent.specialty = def.specialty;
+        existingAgent.systemPrompt = def.systemPrompt;
+        await existingAgent.save();
       }
     }
   }
