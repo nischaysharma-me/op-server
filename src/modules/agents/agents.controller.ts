@@ -62,5 +62,14 @@ export class AgentsController {
   ) {
     return this.memoryService.searchMemories(code.toUpperCase(), query, topK || 5);
   }
+
+  /**
+   * Manually trigger synchronization of unindexed memories to Pinecone vector database
+   */
+  @Post('pinecone/sync')
+  @HttpCode(HttpStatus.OK)
+  syncPinecone() {
+    return this.memoryService.syncUnindexedMemories();
+  }
 }
 
