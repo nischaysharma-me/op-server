@@ -1,9 +1,49 @@
-import { Controller, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
-import { SparringService } from './sparring.service';
+import { Controller, HttpCode, HttpStatus, Param, Post, Get, Res } from '@nestjs/common';
+import { Response } from 'express';
+import { SparringService, SparringStreamEvent } from './sparring.service';
 
 @Controller('sparring')
 export class SparringController {
   constructor(private readonly sparringService: SparringService) {}
+
+  /**
+   * Real-time Server-Sent Events (SSE) token streaming for full multi-agent sparring cycle
+   */
+  @Get('stream/:issueId')
+  async streamGet(
+    @Param('issueId') issueId: string,
+    @Res() res: Response,
+  ) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    if (typeof (res as any).flushHeaders === 'function') {
+      (res as any).flushHeaders();
+    }
+
+    const emit = (event: SparringStreamEvent) => {
+      res.write(`data: ${JSON.stringify(event)}\n\n`);
+      if (typeof (res as any).flush === 'function') {
+        (res as any).flush();
+      }
+    };
+
+    try {
+      await this.sparringService.streamFullSparring(issueId, emit);
+    } catch (err: any) {
+      emit({ type: 'error', text: err.message });
+    } finally {
+      res.end();
+    }
+  }
+
+  @Post('stream/:issueId')
+  async streamPost(
+    @Param('issueId') issueId: string,
+    @Res() res: Response,
+  ) {
+    return this.streamGet(issueId, res);
+  }
 
   @Post('cross-examine/:issueId')
   @HttpCode(HttpStatus.OK)
