@@ -1,1 +1,0 @@
-exports.User = new mongoose.model("User", userManagementSchemas.users)
