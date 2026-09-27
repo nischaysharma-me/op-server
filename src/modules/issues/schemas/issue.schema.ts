@@ -24,7 +24,7 @@ export const OpinionItemSchema = SchemaFactory.createForClass(OpinionItem);
 
 @Schema({ timestamps: true })
 export class Issue {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, default: 'Discussion' })
   title: string;
 
   @Prop({ type: String, required: true })

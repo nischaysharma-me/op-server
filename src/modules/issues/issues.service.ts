@@ -54,6 +54,14 @@ export class IssuesService {
 
   async create(createIssueDto: CreateIssueDto): Promise<{ issue: Issue }> {
     try {
+      if (!createIssueDto.title || !createIssueDto.title.trim()) {
+        const cleanContent = (createIssueDto.content || '')
+          .replace(/<[^>]*>/g, '')
+          .replace(/[#*`_~]/g, '')
+          .trim();
+        const firstLine = cleanContent.split('\n')[0].trim();
+        createIssueDto.title = firstLine.slice(0, 80) || 'Trouble Discussion';
+      }
       const issue = new this.issueModel(createIssueDto);
       const data = await issue.save();
 
