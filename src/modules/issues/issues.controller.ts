@@ -28,6 +28,11 @@ export class IssuesController {
     return this.issuesService.findOne(id);
   }
 
+  @Get(':id')
+  findOneDirect(@Param('id') id: string) {
+    return this.issuesService.findOne(id);
+  }
+
   @Get('user/:userId')
   findByUser(@Param('userId') userId: string) {
     return this.issuesService.findByUser(userId);
