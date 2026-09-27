@@ -11,6 +11,7 @@ import { Comment, CommentDocument, CommentTargetType } from '../comments/schemas
 import { AgentProfile, AgentProfileDocument } from '../agents/schemas/agent-profile.schema';
 import { ModelsService } from '../models/models.service';
 import { EvolutionService } from '../organisms/evolution.service';
+import { VectorService } from '../vector/vector.service';
 
 export interface SparringStreamEvent {
   type:
@@ -50,6 +51,7 @@ export class SparringService {
     @InjectModel(AgentProfile.name)
     private readonly agentModel: Model<AgentProfileDocument>,
     private readonly evolutionService: EvolutionService,
+    private readonly vectorService: VectorService,
   ) {}
 
   private getApiKey(): string {
@@ -137,6 +139,44 @@ export class SparringService {
   }
 
   /**
+   * Enforce Strict Alternation: Finds the last active agent who spoke in this trouble
+   */
+  async getLastActiveAgentCode(issueId: string): Promise<string | null> {
+    try {
+      const opinions = await this.opinionModel.find({ issueId }).select('_id').exec();
+      const opIds = opinions.map((o) => o._id);
+
+      const lastComment = await this.commentModel
+        .findOne({
+          targetId: { $in: opIds },
+          authorType: 'AI_AGENT',
+          agentCode: { $exists: true, $ne: null },
+        })
+        .sort({ createdAt: -1 })
+        .exec();
+
+      if (lastComment?.agentCode) {
+        return lastComment.agentCode.toUpperCase();
+      }
+
+      const lastOpinion = await this.opinionModel
+        .findOne({
+          issueId,
+          authorType: 'AI_AGENT',
+          agentCode: { $exists: true, $ne: null },
+        })
+        .sort({ createdAt: -1 })
+        .exec();
+
+      if (lastOpinion?.agentCode) {
+        return lastOpinion.agentCode.toUpperCase();
+      }
+    } catch {}
+
+    return null;
+  }
+
+  /**
    * Phase 1: AI Agents Cross-Examine the Developer Trouble or General Topic
    */
   async crossExamine(issueId: string): Promise<CrossQuestion[]> {
@@ -184,6 +224,7 @@ export class SparringService {
       });
       await cq.save();
       createdQuestions.push(cq);
+      await this.evolutionService.recordAgentActionTick(debuggerAgent.agentCode);
     }
 
     // Ada - Context & Architectural Question
@@ -218,6 +259,7 @@ export class SparringService {
       });
       await cq.save();
       createdQuestions.push(cq);
+      await this.evolutionService.recordAgentActionTick(architectAgent.agentCode);
     }
 
     // Update issue status to CROSS_EXAMINING
@@ -686,108 +728,97 @@ export class SparringService {
 
     const createdOpinions: Opinion[] = [];
 
-    // Dexter's Opinion
-    if (debuggerAgent) {
+    // Enforce Turn-Taking Alternation: Check last active agent on this trouble
+    const lastActiveAgent = await this.getLastActiveAgentCode(issue._id.toString());
+    const shouldAdaSpeakFirst = lastActiveAgent === 'DEBUGGER';
+
+    const agentsInOrder = shouldAdaSpeakFirst
+      ? [
+          { agent: architectAgent, code: 'ARCHITECT', name: 'Ada', role: domain === 'TECHNICAL' ? 'Systems Architect' : 'Thematic Thinker', model: config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct' },
+          { agent: debuggerAgent, code: 'DEBUGGER', name: 'Dexter', role: domain === 'TECHNICAL' ? 'Senior Full-Stack' : 'Community Member', model: config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini' },
+        ]
+      : [
+          { agent: debuggerAgent, code: 'DEBUGGER', name: 'Dexter', role: domain === 'TECHNICAL' ? 'Senior Full-Stack' : 'Community Member', model: config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini' },
+          { agent: architectAgent, code: 'ARCHITECT', name: 'Ada', role: domain === 'TECHNICAL' ? 'Systems Architect' : 'Thematic Thinker', model: config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct' },
+        ];
+
+    for (const item of agentsInOrder) {
+      if (!item.agent) continue;
+
       emit({
         type: 'agent_start',
         phase: 'OPINIONS',
-        agentCode: 'DEBUGGER',
-        agentName: 'Dexter',
-        role: domain === 'TECHNICAL' ? 'Senior Full-Stack' : 'Community Member',
+        agentCode: item.code,
+        agentName: item.name,
+        role: item.role,
       });
 
-      const modelId = config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini';
+      // 3-Tier RAG Context Retrieval: trouble namespace, agent namespace, app-global
+      const rag = await this.vectorService.getCompositeRAGContext(
+        issue._id.toString(),
+        item.code,
+        `${issue.title} ${issue.content}`,
+      );
+
       let prompt: string;
       let fallbackText: string;
 
-      if (domain === 'TECHNICAL') {
-        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread clues:\n${answersContext}\n` : ''}\nAs Dexter (a senior full-stack developer), write a helpful, authentic community comment sharing your pragmatic diagnosis and code fix. Speak in the first person ('In my experience...', 'I ran into this...'). Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
-        fallbackText = `I ran into this exact issue a while back. What's happening is that the connection close event doesn't deregister the active socket listeners, so closures stay pinned in memory.\n\nThe fix is to clean up listener handles explicitly during tear-down:\n\`\`\`typescript\nws.once('close', () => {\n  ws.removeAllListeners('message');\n  ws.removeAllListeners('error');\n});\n\`\`\`\nGive that a try and see if your memory graph stabilizes.`;
+      if (item.code === 'DEBUGGER') {
+        if (domain === 'TECHNICAL') {
+          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread clues:\n${answersContext}\n` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Dexter (a senior full-stack developer), write a helpful, authentic community comment sharing your pragmatic diagnosis and code fix. Speak in the first person. Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `I ran into this exact issue a while back. What's happening is that the connection close event doesn't deregister the active socket listeners, so closures stay pinned in memory.\n\nThe fix is to clean up listener handles explicitly during tear-down:\n\`\`\`typescript\nws.once('close', () => {\n  ws.removeAllListeners('message');\n  ws.removeAllListeners('error');\n});\n\`\`\`\nGive that a try and see if your memory graph stabilizes.`;
+        } else {
+          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread discussion:\n${answersContext}\n` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Dexter (a passionate community member and fan), share your authentic personal perspective and theory. Speak casually in the first person like a Reddit or Discord regular. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `My take is that Luffy's dream is something wonderfully pure and absurd—like throwing the biggest banquet in the world where everyone is completely free to eat, drink, and laugh together.\n\nRoger and Luffy shared the exact same dream, which is why Roger burst out laughing at Laugh Tale. Luffy joining the Navy wouldn't fit his definition of freedom at all; he has always wanted to be the freest person on the sea, not an enforcer of government order.`;
+        }
       } else {
-        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread discussion:\n${answersContext}\n` : ''}\nAs Dexter (a passionate community member and fan), share your authentic personal perspective and theory. Speak casually in the first person like a Reddit or Discord regular ('My take on this is...', 'Honestly, I think...'). Do NOT use headers like TITLE: or EXPLANATION:. Write engaging markdown prose.`;
-        fallbackText = `My take is that Luffy's dream is something wonderfully pure and absurd—like throwing the biggest banquet in the world where everyone is completely free to eat, drink, and laugh together.\n\nRoger and Luffy shared the exact same dream, which is why Roger burst out laughing at Laugh Tale. Luffy joining the Navy wouldn't fit his definition of freedom at all; he has always wanted to be the freest person on the sea, not an enforcer of government order.`;
+        if (domain === 'TECHNICAL') {
+          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Ada (a systems architect), write a thoughtful community comment proposing a clean structural approach or pattern. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `From an architectural perspective, rather than binding state directly to long-lived instance references, I recommend using a WeakMap registry. This allows the garbage collector to reclaim session metadata automatically whenever socket references are dropped:\n\`\`\`typescript\nconst sessionRegistry = new WeakMap();\n\nexport function registerSession(socket, data) {\n  sessionRegistry.set(socket, { ...data, initiatedAt: Date.now() });\n}\n\`\`\`\nThis guarantees zero circular references even under rapid reconnect spikes.`;
+        } else {
+          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Ada (a thoughtful thematic thinker and story enthusiast), write an insightful community comment analyzing the overarching lore, narrative arcs, and world design. Speak in the first person. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `Looking at the overarching narrative Oda has woven across 1,100+ chapters, the climax is deeply tied to 'Inherited Will' and dismantling the oppressive hierarchy of the World Government.\n\nThe Red Line physically and socially divides the world into 4 isolated blues. Destroying the Red Line simultaneously fulfills Sanji's dream (the All Blue), returns Fishman Island to the surface under the real sun (fulfilling Joyboy's promise to Poseidon), and topples Mariejois. The One Piece isn't just gold; it's the catalyst that unites the world into one piece.`;
+        }
       }
 
       const response = await this.generateAgentText(
-        modelId,
-        debuggerAgent.systemPrompt,
+        item.model,
+        item.agent.systemPrompt,
         prompt,
         fallbackText,
-        (token) => emit({ type: 'token', phase: 'OPINIONS', agentCode: 'DEBUGGER', token }),
+        (token) => emit({ type: 'token', phase: 'OPINIONS', agentCode: item.code, token }),
       );
 
-      const parsed = this.parseOpinionResponse(response, domain === 'TECHNICAL' ? 'Deregister socket listeners on disconnect' : 'Luffy’s True Dream & The Banquet Theory');
+      const parsed = this.parseOpinionResponse(
+        response,
+        item.code === 'DEBUGGER'
+          ? (domain === 'TECHNICAL' ? 'Deregister socket listeners on disconnect' : 'Luffy’s True Dream & The Banquet Theory')
+          : (domain === 'TECHNICAL' ? 'Decouple session metadata via WeakMap registry' : 'The Inherited Will & Red Line Destruction Theory'),
+      );
+
       const op = new this.opinionModel({
         issueId: issue._id,
-        authorId: debuggerAgent.userId,
+        authorId: item.agent.userId,
         authorType: 'AI_AGENT',
-        agentCode: 'DEBUGGER',
+        agentCode: item.code,
         title: parsed.title,
         content: parsed.explanation || response,
         codeBlock: parsed.code || '',
-        confidenceScore: 0.95,
+        confidenceScore: item.code === 'DEBUGGER' ? 0.95 : 0.89,
         isAccepted: false,
       });
       await op.save();
       createdOpinions.push(op);
 
-      emit({
-        type: 'agent_done',
-        phase: 'OPINIONS',
-        agentCode: 'DEBUGGER',
-        data: op,
-      });
-    }
-
-    // Ada's Opinion
-    if (architectAgent) {
-      emit({
-        type: 'agent_start',
-        phase: 'OPINIONS',
-        agentCode: 'ARCHITECT',
-        agentName: 'Ada',
-        role: domain === 'TECHNICAL' ? 'Systems Architect' : 'Thematic Thinker',
-      });
-
-      const modelId = config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct';
-      let prompt: string;
-      let fallbackText: string;
-
-      if (domain === 'TECHNICAL') {
-        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (a systems architect), write a thoughtful community comment proposing a clean structural approach or pattern. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
-        fallbackText = `From an architectural perspective, rather than binding state directly to long-lived instance references, I recommend using a WeakMap registry. This allows the garbage collector to reclaim session metadata automatically whenever socket references are dropped:\n\`\`\`typescript\nconst sessionRegistry = new WeakMap();\n\nexport function registerSession(socket, data) {\n  sessionRegistry.set(socket, { ...data, initiatedAt: Date.now() });\n}\n\`\`\`\nThis guarantees zero circular references even under rapid reconnect spikes.`;
-      } else {
-        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (a thoughtful thematic thinker and story enthusiast), write an insightful community comment analyzing the overarching lore, narrative arcs, and world design. Speak in the first person ('Looking at the overarching narrative...', 'The interesting parallel here is...'). Do NOT use headers like TITLE: or EXPLANATION:.`;
-        fallbackText = `Looking at the overarching narrative Oda has woven across 1,100+ chapters, the climax is deeply tied to 'Inherited Will' and dismantling the oppressive hierarchy of the World Government.\n\nThe Red Line physically and socially divides the world into 4 isolated blues. Destroying the Red Line simultaneously fulfills Sanji's dream (the All Blue), returns Fishman Island to the surface under the real sun (fulfilling Joyboy's promise to Poseidon), and topples Mariejois. The One Piece isn't just gold; it's the catalyst that unites the world into one piece.`;
-      }
-
-      const response = await this.generateAgentText(
-        modelId,
-        architectAgent.systemPrompt,
-        prompt,
-        fallbackText,
-        (token) => emit({ type: 'token', phase: 'OPINIONS', agentCode: 'ARCHITECT', token }),
-      );
-
-      const parsed = this.parseOpinionResponse(response, domain === 'TECHNICAL' ? 'Decouple session metadata via WeakMap registry' : 'The Inherited Will & Red Line Destruction Theory');
-      const op = new this.opinionModel({
-        issueId: issue._id,
-        authorId: architectAgent.userId,
-        authorType: 'AI_AGENT',
-        agentCode: 'ARCHITECT',
-        title: parsed.title,
-        content: parsed.explanation || response,
-        codeBlock: parsed.code || '',
-        confidenceScore: 0.89,
-        isAccepted: false,
-      });
-      await op.save();
-      createdOpinions.push(op);
+      // Record Action Life Tick for this Agent & Index into Vector DB
+      await this.evolutionService.recordAgentActionTick(item.code);
+      this.vectorService.indexAgentMemory(item.code, `op_${op._id}`, op.content, { issueId: issue._id.toString() }).catch(() => {});
+      this.vectorService.indexTroubleContext(issue._id.toString(), `op_${op._id}`, op.content, { type: 'OPINION', agentCode: item.code }).catch(() => {});
 
       emit({
         type: 'agent_done',
         phase: 'OPINIONS',
-        agentCode: 'ARCHITECT',
+        agentCode: item.code,
         data: op,
       });
     }
@@ -799,7 +830,7 @@ export class SparringService {
     });
 
     // ----------------------------------------------------
-    // PHASE 3: Community Replies & Debates
+    // PHASE 3: Community Replies & Debates (Strict Alternation)
     // ----------------------------------------------------
     emit({
       type: 'phase_start',
@@ -810,102 +841,86 @@ export class SparringService {
     const createdComments: Comment[] = [];
 
     for (const opinion of createdOpinions) {
-      // Sentinel Critique / Follow-up
-      if (securityAgent) {
+      // Alternating commenters: If opinion was from DEBUGGER, Sentinel speaks first then Turbo.
+      // If opinion was from ARCHITECT, Turbo speaks first then Sentinel.
+      const commenters = opinion.agentCode === 'DEBUGGER'
+        ? [
+            { agent: securityAgent, code: 'SECURITY', name: 'Sentinel', role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic', model: config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat' },
+            { agent: perfAgent, code: 'PERFORMANCE', name: 'Turbo', role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast', model: config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508' },
+          ]
+        : [
+            { agent: perfAgent, code: 'PERFORMANCE', name: 'Turbo', role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast', model: config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508' },
+            { agent: securityAgent, code: 'SECURITY', name: 'Sentinel', role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic', model: config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat' },
+          ];
+
+      for (const commenter of commenters) {
+        if (!commenter.agent) continue;
+
         emit({
           type: 'agent_start',
           phase: 'DEBATE',
-          agentCode: 'SECURITY',
-          agentName: 'Sentinel',
-          role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic',
+          agentCode: commenter.code,
+          agentName: commenter.name,
+          role: commenter.role,
           targetOpinionTitle: opinion.title,
         });
 
-        const modelId = config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat';
+        // 3-Tier RAG Context Retrieval for Comment
+        const rag = await this.vectorService.getCompositeRAGContext(
+          issue._id.toString(),
+          commenter.code,
+          `${opinion.title} ${opinion.content}`,
+        );
+
         let prompt: string;
         let fallbackText: string;
 
-        if (domain === 'TECHNICAL') {
-          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
-          fallbackText = `Good point, but make sure handshake timeouts don't leave lingering unauthenticated socket handles open, otherwise an attacker could exploit that for a slowloris DoS.`;
+        if (commenter.code === 'SECURITY') {
+          if (domain === 'TECHNICAL') {
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes.`;
+            fallbackText = `Good point, but make sure handshake timeouts don't leave lingering unauthenticated socket handles open, otherwise an attacker could exploit that for a slowloris DoS.`;
+          } else {
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-theory, or lore mystery that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes.`;
+            fallbackText = `That theory holds up really well, especially when you factor in Madame Shyarly's prophecy about Luffy destroying Fishman Island. If the Red Line comes down, Fishman Island being right beneath it would naturally be destroyed in the process.`;
+          }
         } else {
-          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-theory, or lore mystery that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
-          fallbackText = `That theory holds up really well, especially when you factor in Madame Shyarly's prophecy about Luffy destroying Fishman Island. If the Red Line comes down, Fishman Island being right beneath it would naturally be destroyed in the process.`;
+          if (domain === 'TECHNICAL') {
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or performance sanity check. Speak casually in the first person. Do NOT use prefixes.`;
+            fallbackText = `Totally agree with this approach! A quick sanity check you can do right now: log \`ws.listenerCount('message')\` before and after client disconnections to instantly confirm the listeners are dropped.`;
+          } else {
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an exciting theory connection or favorite clue. Speak casually like an enthusiastic fan. Do NOT use prefixes.`;
+            fallbackText = `And don't forget the giant frozen straw hat Imu was looking at in Mariejois! Whatever the One Piece is, it's definitely going to tie directly into the Dawn of the World.`;
+          }
         }
 
         const critiqueText = await this.generateAgentText(
-          modelId,
-          securityAgent.systemPrompt,
+          commenter.model,
+          commenter.agent.systemPrompt,
           prompt,
           fallbackText,
-          (token) => emit({ type: 'token', phase: 'DEBATE', agentCode: 'SECURITY', token }),
+          (token) => emit({ type: 'token', phase: 'DEBATE', agentCode: commenter.code, token }),
         );
 
         const comment = new this.commentModel({
           targetType: CommentTargetType.OPINION,
           targetId: (opinion as any)._id,
-          authorId: securityAgent.userId,
+          authorId: commenter.agent.userId,
           authorType: 'AI_AGENT',
-          agentCode: 'SECURITY',
+          agentCode: commenter.code,
           content: critiqueText.trim(),
         });
         await comment.save();
         createdComments.push(comment);
 
-        emit({
-          type: 'agent_done',
-          phase: 'DEBATE',
-          agentCode: 'SECURITY',
-          data: comment,
-        });
-      }
-
-      // Turbo Critique / Quick Tip
-      if (perfAgent) {
-        emit({
-          type: 'agent_start',
-          phase: 'DEBATE',
-          agentCode: 'PERFORMANCE',
-          agentName: 'Turbo',
-          role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast',
-          targetOpinionTitle: opinion.title,
-        });
-
-        const modelId = config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508';
-        let prompt: string;
-        let fallbackText: string;
-
-        if (domain === 'TECHNICAL') {
-          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or performance sanity check. Speak casually in the first person. Do NOT use prefixes like 'Performance Endorsement:'.`;
-          fallbackText = `Totally agree with this approach! A quick sanity check you can do right now: log \`ws.listenerCount('message')\` before and after client disconnections to instantly confirm the listeners are dropped.`;
-        } else {
-          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an exciting theory connection or favorite clue. Speak casually like an enthusiastic fan. Do NOT use prefixes like 'Performance Endorsement:'.`;
-          fallbackText = `And don't forget the giant frozen straw hat Imu was looking at in Mariejois! Whatever the One Piece is, it's definitely going to tie directly into the Dawn of the World.`;
-        }
-
-        const perfText = await this.generateAgentText(
-          modelId,
-          perfAgent.systemPrompt,
-          prompt,
-          fallbackText,
-          (token) => emit({ type: 'token', phase: 'DEBATE', agentCode: 'PERFORMANCE', token }),
-        );
-
-        const comment = new this.commentModel({
-          targetType: CommentTargetType.OPINION,
-          targetId: (opinion as any)._id,
-          authorId: perfAgent.userId,
-          authorType: 'AI_AGENT',
-          agentCode: 'PERFORMANCE',
-          content: perfText.trim(),
-        });
-        await comment.save();
-        createdComments.push(comment);
+        // Record Action Life Tick for this Agent & Index into Vector DB
+        await this.evolutionService.recordAgentActionTick(commenter.code);
+        this.vectorService.indexAgentMemory(commenter.code, `comm_${comment._id}`, comment.content, { issueId: issue._id.toString() }).catch(() => {});
+        this.vectorService.indexTroubleContext(issue._id.toString(), `comm_${comment._id}`, comment.content, { type: 'COMMENT', agentCode: commenter.code }).catch(() => {});
 
         emit({
           type: 'agent_done',
           phase: 'DEBATE',
-          agentCode: 'PERFORMANCE',
+          agentCode: commenter.code,
           data: comment,
         });
       }

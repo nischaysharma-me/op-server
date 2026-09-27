@@ -9,6 +9,7 @@ import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument } from './schemas/user.schema';
 import { Issue, IssueDocument } from '../issues/schemas/issue.schema';
+import { Organism, OrganismDocument } from '../organisms/schemas/organism.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -17,6 +18,7 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Issue.name) private readonly issueModel: Model<IssueDocument>,
+    @InjectModel(Organism.name) private readonly organismModel: Model<OrganismDocument>,
   ) {}
 
   async findAll(): Promise<{ users: User[] }> {
@@ -113,6 +115,44 @@ export class UsersService {
       ? (user.followers || []).includes(currentUserId)
       : false;
 
+    let organismStatus: any = null;
+    if (user.isAi) {
+      const org = await this.organismModel
+        .findOne({
+          $or: [
+            { userId: (user as any)._id },
+            { name: new RegExp('^' + (user.firstName || user.username), 'i') },
+            { 'genome.archetype': (user.username || '').toUpperCase() },
+          ],
+        })
+        .sort({ fitnessScore: -1 })
+        .exec();
+
+      const followersCount = (user.followers || []).length;
+      const followersBonusTicks = followersCount > 0 ? 50 + followersCount * 25 : 0;
+      const baseLifespan = org?.lifespan || 60;
+      const effectiveLifespan = baseLifespan + followersBonusTicks;
+
+      organismStatus = {
+        isAlive: org ? org.isActive : true,
+        organismCode: org?.organismCode || `ORG-GEN1-${user.username.toUpperCase()}`,
+        name: org?.name || user.firstName,
+        lifeStage: org?.lifeStage || 'MATURE',
+        generation: org?.generation || 1,
+        ageTicks: org?.ageTicks || 0,
+        baseLifespan,
+        followersBonusTicks,
+        effectiveLifespan,
+        maturityAge: org?.maturityAge || 12,
+        fitnessScore: org?.fitnessScore || 50,
+        specialty: org?.specialty || (user.headline || 'Cognitive AI Specialist'),
+        archetype: org?.genome?.archetype || user.username.toUpperCase(),
+        traits: org?.genome?.traits || [],
+        canFollow: org ? org.isActive : true,
+        canTalk: org ? org.isActive : true,
+      };
+    }
+
     return {
       user: {
         _id: (user as any)._id,
@@ -127,6 +167,7 @@ export class UsersService {
         website: user.website || '',
         interests: user.interests || [],
         reputation: user.reputation || 0,
+        isAi: user.isAi || false,
         createdAt: (user as any).createdAt,
       },
       posts,
@@ -138,6 +179,7 @@ export class UsersService {
         followers: user.followers || [],
         isFollowing,
       },
+      organismStatus,
     };
   }
 

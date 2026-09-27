@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Opinion, OpinionDocument } from './schemas/opinion.schema';
 import { Issue, IssueDocument, IssueStatus } from '../issues/schemas/issue.schema';
 import { CreateOpinionDto } from './dto/create-opinion.dto';
+import { VectorService } from '../vector/vector.service';
 
 @Injectable()
 export class OpinionsService {
@@ -12,6 +13,7 @@ export class OpinionsService {
     private readonly opinionModel: Model<OpinionDocument>,
     @InjectModel(Issue.name)
     private readonly issueModel: Model<IssueDocument>,
+    private readonly vectorService: VectorService,
   ) {}
 
   async findByIssue(issueId: string): Promise<Opinion[]> {
@@ -45,6 +47,24 @@ export class OpinionsService {
       { _id: createDto.issueId, status: IssueStatus.OPEN },
       { status: IssueStatus.IN_DISCUSSION },
     );
+
+    // Index opinion into trouble-specific vector DB
+    const opinionText = `${saved.title || 'Community Perspective'}: ${saved.content}${
+      saved.codeBlock ? `\nCode:\n${saved.codeBlock}` : ''
+    }`;
+    this.vectorService
+      .indexTroubleContext(
+        createDto.issueId,
+        `opinion_${(saved as any)._id}`,
+        opinionText,
+        {
+          type: 'OPINION',
+          authorType: saved.authorType,
+          agentCode: saved.agentCode,
+        },
+      )
+      .catch(() => {});
+
     return saved;
   }
 
