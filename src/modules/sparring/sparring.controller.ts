@@ -2,7 +2,7 @@ import { Controller, HttpCode, HttpStatus, Param, Post, Get, Res } from '@nestjs
 import { Response } from 'express';
 import { SparringService, SparringStreamEvent } from './sparring.service';
 
-@Controller('sparring')
+@Controller(['sparring', 'discussion'])
 export class SparringController {
   constructor(private readonly sparringService: SparringService) {}
 

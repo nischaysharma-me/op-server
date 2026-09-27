@@ -72,27 +72,27 @@ export class MessagesService {
       const defaultAgents = [
         {
           code: 'DEBUGGER',
-          name: 'Dexter (Debugger)',
-          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Dexter',
-          greeting: 'Hello! I am Dexter. If you are investigating a tricky bug, performance issue, or mystery, send me a message anytime!',
+          name: 'Rajesh (Debugger)',
+          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Rajesh',
+          greeting: 'Hello! I am Rajesh. If you are investigating a tricky bug, trouble, or question, send me a message anytime!',
         },
         {
           code: 'ARCHITECT',
-          name: 'Ada (Architect)',
-          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Ada',
-          greeting: 'Greetings! I am Ada. Feel free to discuss system design, scalability patterns, or high-level architecture with me.',
+          name: 'Alice (Architect)',
+          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Alice',
+          greeting: 'Greetings! I am Alice. Feel free to discuss system design, thoughtful perspectives, or architecture with me.',
         },
         {
           code: 'SECURITY',
-          name: 'Sentinel (Security)',
-          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sentinel',
-          greeting: 'Security audit standing by. Drop me a line if you need risk evaluation, vulnerability assessments, or threat analysis.',
+          name: 'Dan (Security)',
+          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Dan',
+          greeting: 'Hey! I am Dan. Drop me a line if you need risk evaluation, edge-case perspectives, or honest feedback.',
         },
         {
           code: 'PERFORMANCE',
-          name: 'Turbo (Performance)',
-          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Turbo',
-          greeting: 'Ready to optimize! Send me questions about latency, memory consumption, or rapid execution protocols.',
+          name: 'Maya (Performance)',
+          avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Maya',
+          greeting: 'Ready to optimize! Send me questions about speed, efficiency, or creative energetic solutions.',
         },
       ];
 
@@ -264,12 +264,12 @@ export class MessagesService {
 
     // Persona-tailored fallback responses
     const fallbacks: Record<string, string> = {
-      DEBUGGER: `Dexter here. I received your message: "${userMessage.substring(0, 60)}...". Let's investigate the specifics. If this relates to an issue or discussion, verify the exact error messages or edge cases so we can isolate the root cause!`,
-      ARCHITECT: `Ada here. Regarding your note, I recommend analyzing this through modular boundaries and long-term stability. What are your core constraints and primary goals for this?`,
-      SECURITY: `Sentinel here. Message received and logged. From a safety and risk audit perspective, ensure that any external inputs are validated and contingency measures are in place before proceeding.`,
-      PERFORMANCE: `Turbo here. Read your message! If you need execution speed and minimal resource overhead, prioritize high-impact actions first and eliminate redundant steps.`,
+      DEBUGGER: `Rajesh here. I received your message: "${userMessage.substring(0, 60)}...". Let's look into the details. Feel free to share more context so we can get to the root of it!`,
+      ARCHITECT: `Alice here. Regarding your note, I recommend analyzing this through modular design and long-term clarity. What are your core goals and constraints?`,
+      SECURITY: `Dan here. Message received and noted! From a safety and edge-case perspective, ensure that your assumptions are tested thoroughly before moving forward.`,
+      PERFORMANCE: `Maya here. Read your message! If you need things done quickly with high impact, prioritize the simplest direct approach first and go from there.`,
     };
 
-    return fallbacks[agentCode] || `Organism ${agentCode} received your message. I am actively monitoring our space memories and will factor this into our next sparring rounds!`;
+    return fallbacks[agentCode] || `Agent ${agentCode} received your message. I am actively following our community threads and will participate in our next discussions!`;
   }
 }
