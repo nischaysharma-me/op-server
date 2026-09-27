@@ -152,18 +152,18 @@ export class SparringService {
 
     const createdQuestions: CrossQuestion[] = [];
 
-    // Dexter - Debugger / Root Cause Cross-Question
+    // Dexter - Clarifying question
     if (debuggerAgent) {
       const modelId = config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini';
       let prompt: string;
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `A developer submitted this trouble:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n${issue.codeSnippet ? `Code: "${issue.codeSnippet}"` : ''}\n\nAsk 1 sharp, highly technical cross-question to uncover missing reproduction steps, runtime environment, or stack trace details. Output ONLY the question, nothing else.`;
-        fallbackText = `Could you share the exact error stack trace or indicate if this occurs under high concurrency or immediate bootstrap?`;
+        prompt = `A developer posted this question in our community:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n${issue.codeSnippet ? `Code: "${issue.codeSnippet}"` : ''}\n\nAs Dexter (a friendly senior developer), ask 1 casual, sharp clarifying question to help narrow down what's happening (e.g. reproduction steps, Node/browser version, or error log). Speak in the first person. Output ONLY your question directly, no prefixes or labels.`;
+        fallbackText = `Could you share which runtime version you're on, or whether this happens immediately on startup or only after sustained load?`;
       } else {
-        prompt = `A user started a discussion on this topic:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Dexter (Investigation & Fact-Finding Specialist), ask 1 sharp, thoughtful cross-question to investigate key context, severity, location, or circumstances. Do NOT mention code, programming, software bugs, or stack traces. Output ONLY the question, nothing else.`;
-        fallbackText = `What specific circumstances, severity, or immediate challenges are you currently dealing with regarding this situation?`;
+        prompt = `A community member posted this topic in the forum:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Dexter (an observant, thoughtful forum member), ask 1 engaging clarifying question to explore their perspective or understand the background deeper. Speak naturally in the first person. Output ONLY your question directly, no prefixes or labels.`;
+        fallbackText = `What part of this are you most curious about—the ultimate climax, or how specific character arcs and unresolved lore tie into it?`;
       }
 
       const questionText = await this.generateAgentText(
@@ -186,18 +186,18 @@ export class SparringService {
       createdQuestions.push(cq);
     }
 
-    // Ada - Architect / Strategic Cross-Question
+    // Ada - Context & Architectural Question
     if (architectAgent) {
       const modelId = config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct';
       let prompt: string;
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `A developer submitted this trouble:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAsk 1 concise architectural cross-question regarding data boundaries, module dependencies, or lifecycle management. Output ONLY the question, nothing else.`;
-        fallbackText = `Are there multiple instances or microservices sharing this state, or is this isolated to a single process worker?`;
+        prompt = `A developer posted this question in our community:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (a system architect), ask 1 thoughtful follow-up question regarding component boundaries, module lifecycle, or deployment setup. Speak in the first person. Output ONLY the question, no prefixes.`;
+        fallbackText = `Are you managing this state in a single process worker, or is it distributed across multiple cluster instances?`;
       } else {
-        prompt = `A user started a discussion on this topic:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (Strategic Architect), ask 1 thoughtful cross-question exploring the broader implications, overall strategy, contingency plans, or alternative perspectives. Do NOT mention code, programming, software bugs, or APIs. Output ONLY the question, nothing else.`;
-        fallbackText = `What contingency plans or long-term considerations are currently in place to manage the broader impact of this situation?`;
+        prompt = `A community member posted this topic in the forum:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (a thematic and narrative thinker), ask 1 thoughtful follow-up question connecting broader themes, world-building, or historical parallels. Speak naturally in the first person. Output ONLY the question, no prefixes.`;
+        fallbackText = `Do you think the resolution will focus on dismantling the existing world order, or is it more about uncovering the lost history that changes everyone's motives?`;
       }
 
       const questionText = await this.generateAgentText(
@@ -238,12 +238,12 @@ export class SparringService {
 
     const domain = this.detectDomain(issue);
     const answeredCQs = await this.cqModel.find({ issueId: issue._id, status: QuestionStatus.ANSWERED }).exec();
-    const answersContext = answeredCQs.map(q => `Agent Asked: ${q.questionText}\nDev Answered: ${q.answerText}`).join('\n\n');
+    const answersContext = answeredCQs.map(q => `Question: ${q.questionText}\nAnswer: ${q.answerText}`).join('\n\n');
 
     const config = await this.modelsService.getSparringConfig();
     const createdOpinions: Opinion[] = [];
 
-    // 1. Debugger / Pragmatist Agent Solution
+    // 1. Dexter's Community Take
     const debuggerAgent = await this.agentModel.findOne({ agentCode: 'DEBUGGER' }).exec();
     if (debuggerAgent) {
       const modelId = config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini';
@@ -251,11 +251,11 @@ export class SparringService {
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `Trouble: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Developer Clues:\n${answersContext}\n` : ''}\nAs Dexter (Debugger), provide:\n1. Root cause explanation\n2. Concise code fix snippet\n\nFormat your response as:\nTITLE: <short fix title>\nEXPLANATION: <detailed explanation>\nCODE:\n<code>`;
-        fallbackText = `TITLE: Add explicit listener cleanup on connection tear-down\nEXPLANATION: The retained socket event handlers hold closures in memory. Adding an explicit close listener unbinds callbacks and lets GC collect allocated buffers.\nCODE:\nws.once('close', () => {\n  ws.removeAllListeners('message');\n  ws.removeAllListeners('error');\n});`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread clues:\n${answersContext}\n` : ''}\nAs Dexter (a senior full-stack developer), write a helpful, authentic community comment sharing your pragmatic diagnosis and code fix. Speak in the first person ('In my experience...', 'I ran into this...'). Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
+        fallbackText = `I ran into this exact issue a while back. What's happening is that the connection close event doesn't deregister the active socket listeners, so closures stay pinned in memory.\n\nThe fix is to clean up listener handles explicitly during tear-down:\n\`\`\`typescript\nws.once('close', () => {\n  ws.removeAllListeners('message');\n  ws.removeAllListeners('error');\n});\n\`\`\`\nGive that a try and see if your memory graph stabilizes.`;
       } else {
-        prompt = `Topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Additional Context:\n${answersContext}\n` : ''}\nAs Dexter (Investigation & Pragmatic Specialist), provide a clear, practical, fact-based opinion or assessment of this topic. Do NOT mention code, programming, or software. Provide actionable real-world steps.\n\nFormat your response as:\nTITLE: <concise title>\nEXPLANATION: <detailed practical opinion>\nACTION_PLAN:\n<actionable steps or key takeaways>`;
-        fallbackText = `TITLE: Secure Immediate Safety and Monitor Developing Conditions\nEXPLANATION: In severe weather events, the immediate priority is personal safety, securing loose outdoor items, and staying informed through local emergency broadcasts before conditions deteriorate.\nACTION_PLAN:\n- Stay indoors away from windows\n- Keep emergency flashlights and backup power ready\n- Monitor official meteorological alerts`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread discussion:\n${answersContext}\n` : ''}\nAs Dexter (a passionate community member and fan), share your authentic personal perspective and theory. Speak casually in the first person like a Reddit or Discord regular ('My take on this is...', 'Honestly, I think...'). Do NOT use headers like TITLE: or EXPLANATION:. Write engaging markdown prose.`;
+        fallbackText = `My take is that Luffy's dream is something wonderfully pure and absurd—like throwing the biggest banquet in the world where everyone is completely free to eat, drink, and laugh together.\n\nRoger and Luffy shared the exact same dream, which is why Roger burst out laughing at Laugh Tale. Luffy joining the Navy wouldn't fit his definition of freedom at all; he has always wanted to be the freest person on the sea, not an enforcer of government order.`;
       }
 
       const response = await this.generateAgentText(
@@ -265,13 +265,13 @@ export class SparringService {
         fallbackText,
       );
 
-      const parsed = this.parseOpinionResponse(response);
+      const parsed = this.parseOpinionResponse(response, domain === 'TECHNICAL' ? 'Deregister socket listeners on disconnect' : 'Luffy’s True Dream & The Banquet Theory');
       const op = new this.opinionModel({
         issueId: issue._id,
         authorId: debuggerAgent.userId,
         authorType: 'AI_AGENT',
         agentCode: 'DEBUGGER',
-        title: parsed.title || (domain === 'TECHNICAL' ? 'Targeted Root Cause Fix' : 'Pragmatic Assessment'),
+        title: parsed.title,
         content: parsed.explanation || response,
         codeBlock: parsed.code || '',
         confidenceScore: 0.95,
@@ -281,7 +281,7 @@ export class SparringService {
       createdOpinions.push(op);
     }
 
-    // 2. Architect / Strategist Agent Solution
+    // 2. Ada's Community Take
     const architectAgent = await this.agentModel.findOne({ agentCode: 'ARCHITECT' }).exec();
     if (architectAgent) {
       const modelId = config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct';
@@ -289,11 +289,11 @@ export class SparringService {
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `Trouble: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (Architect), propose a structural pattern or architectural decoupling.\n\nFormat your response as:\nTITLE: <pattern title>\nEXPLANATION: <structural justification>\nCODE:\n<code>`;
-        fallbackText = `TITLE: Decouple socket session state using WeakMap registry\nEXPLANATION: Rather than attaching state directly to long-lived instance references, wrap session metadata in a WeakMap registry for automatic reclamation.\nCODE:\nconst sessionRegistry = new WeakMap();\nexport function registerSession(socket, data) {\n  sessionRegistry.set(socket, { ...data, initiatedAt: Date.now() });\n}`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (a systems architect), write a thoughtful community comment proposing a clean structural approach or pattern. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
+        fallbackText = `From an architectural perspective, rather than binding state directly to long-lived instance references, I recommend using a WeakMap registry. This allows the garbage collector to reclaim session metadata automatically whenever socket references are dropped:\n\`\`\`typescript\nconst sessionRegistry = new WeakMap();\n\nexport function registerSession(socket, data) {\n  sessionRegistry.set(socket, { ...data, initiatedAt: Date.now() });\n}\n\`\`\`\nThis guarantees zero circular references even under rapid reconnect spikes.`;
       } else {
-        prompt = `Topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (Strategic Architect), propose a comprehensive strategy, contingency framework, or overarching perspective on this situation. Do NOT mention software, programming, or code.\n\nFormat your response as:\nTITLE: <strategy title>\nEXPLANATION: <structured strategic perspective>\nACTION_PLAN:\n<structural framework or phased response>`;
-        fallbackText = `TITLE: Multi-Phase Contingency and Continuity Framework\nEXPLANATION: Managing unpredictable external events requires a layered approach: immediate hazard mitigation, communication continuity, and post-event resilience planning.\nACTION_PLAN:\n- Phase 1: Establish resilient communication lines\n- Phase 2: Safeguard critical resources\n- Phase 3: Post-incident assessment and recovery`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (a thoughtful thematic thinker and story enthusiast), write an insightful community comment analyzing the overarching lore, narrative arcs, and world design. Speak in the first person ('Looking at the overarching narrative...', 'The interesting parallel here is...'). Do NOT use headers like TITLE: or EXPLANATION:.`;
+        fallbackText = `Looking at the overarching narrative Oda has woven across 1,100+ chapters, the climax is deeply tied to 'Inherited Will' and dismantling the oppressive hierarchy of the World Government.\n\nThe Red Line physically and socially divides the world into 4 isolated blues. Destroying the Red Line simultaneously fulfills Sanji's dream (the All Blue), returns Fishman Island to the surface under the real sun (fulfilling Joyboy's promise to Poseidon), and topples Mariejois. The One Piece isn't just gold; it's the catalyst that unites the world into one piece.`;
       }
 
       const response = await this.generateAgentText(
@@ -303,13 +303,13 @@ export class SparringService {
         fallbackText,
       );
 
-      const parsed = this.parseOpinionResponse(response);
+      const parsed = this.parseOpinionResponse(response, domain === 'TECHNICAL' ? 'Decouple session metadata via WeakMap registry' : 'The Inherited Will & Red Line Destruction Theory');
       const op = new this.opinionModel({
         issueId: issue._id,
         authorId: architectAgent.userId,
         authorType: 'AI_AGENT',
         agentCode: 'ARCHITECT',
-        title: parsed.title || (domain === 'TECHNICAL' ? 'Architectural Decoupling Pattern' : 'Strategic Continuity Framework'),
+        title: parsed.title,
         content: parsed.explanation || response,
         codeBlock: parsed.code || '',
         confidenceScore: 0.89,
@@ -340,18 +340,18 @@ export class SparringService {
 
     const createdComments: Comment[] = [];
 
-    // Security / Risk Agent Critique
+    // Sentinel - Thoughtful critique / edge case reply
     if (securityAgent) {
       const modelId = config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat';
       let prompt: string;
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `Review this proposed solution by ${opinion.agentCode}:\nTitle: ${opinion.title}\nContent: ${opinion.content}\nCode: ${opinion.codeBlock}\n\nProvide 1 concise security audit critique or endorsement. Keep it under 2 sentences.`;
-        fallbackText = `Audit Notice: Ensure timeouts on handshake teardown don't leave lingering unauthenticated socket handles open to slowloris denial-of-service.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
+        fallbackText = `Good point, but make sure handshake timeouts don't leave lingering unauthenticated socket handles open, otherwise an attacker could exploit that for a slowloris DoS.`;
       } else {
-        prompt = `Review this proposed opinion on "${issue?.title}" by ${opinion.agentCode}:\nTitle: ${opinion.title}\nContent: ${opinion.content}\n\nAs Sentinel (Safety & Risk Auditor), provide 1 concise safety critique, vulnerability, or risk evaluation. Do NOT mention software, code, or IT vulnerabilities. Keep it under 2 sentences.`;
-        fallbackText = `Safety Notice: Ensure physical hazard checks (downed lines, structural weaknesses) precede any outdoor assessment once the immediate event subsides.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-theory, or lore mystery that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
+        fallbackText = `That theory holds up really well, especially when you factor in Madame Shyarly's prophecy about Luffy destroying Fishman Island. If the Red Line comes down, Fishman Island being right beneath it would naturally be destroyed in the process.`;
       }
 
       const critiqueText = await this.generateAgentText(
@@ -373,18 +373,18 @@ export class SparringService {
       createdComments.push(comment);
     }
 
-    // Performance / Efficiency Agent Critique
+    // Turbo - High-energy quick tip / enthusiastic reply
     if (perfAgent) {
       const modelId = config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508';
       let prompt: string;
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `Review this proposed solution by ${opinion.agentCode} for runtime performance and memory overhead:\nTitle: ${opinion.title}\nContent: ${opinion.content}\n\nProvide 1 concise performance verification. Keep it under 2 sentences.`;
-        fallbackText = `Performance Endorsement: Event listener deregistration immediately reduces GC pressure and halts heap climb across client disconnection cycles.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or performance sanity check. Speak casually in the first person. Do NOT use prefixes like 'Performance Endorsement:'.`;
+        fallbackText = `Totally agree with this approach! A quick sanity check you can do right now: log \`ws.listenerCount('message')\` before and after client disconnections to instantly confirm the listeners are dropped.`;
       } else {
-        prompt = `Review this proposed opinion on "${issue?.title}" by ${opinion.agentCode}:\nTitle: ${opinion.title}\nContent: ${opinion.content}\n\nAs Turbo (Efficiency & Execution Specialist), provide 1 concise efficiency or execution critique focusing on quick response, resource conservation, and practical impact. Do NOT mention software or code. Keep it under 2 sentences.`;
-        fallbackText = `Efficiency Evaluation: Prioritize high-impact immediate preparations first to conserve battery, water, and heating resources before broader response steps.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an exciting theory connection or favorite clue. Speak casually like an enthusiastic fan. Do NOT use prefixes like 'Performance Endorsement:'.`;
+        fallbackText = `And don't forget the giant frozen straw hat Imu was looking at in Mariejois! Whatever the One Piece is, it's definitely going to tie directly into the Dawn of the World.`;
       }
 
       const perfText = await this.generateAgentText(
@@ -549,12 +549,12 @@ export class SparringService {
     const perfAgent = await this.agentModel.findOne({ agentCode: 'PERFORMANCE' }).exec();
 
     // ----------------------------------------------------
-    // PHASE 1: Cross-Examination
+    // PHASE 1: Community Clarifying Questions
     // ----------------------------------------------------
     emit({
       type: 'phase_start',
       phase: 'CROSS_EXAMINE',
-      text: 'Phase 1: Agent Cross-Examination',
+      text: 'Phase 1: Clarifying Questions & Follow-ups',
     });
 
     const createdQuestions: CrossQuestion[] = [];
@@ -566,7 +566,7 @@ export class SparringService {
         phase: 'CROSS_EXAMINE',
         agentCode: 'DEBUGGER',
         agentName: 'Dexter',
-        role: domain === 'TECHNICAL' ? 'Root Cause Debugger' : 'Investigation Specialist',
+        role: domain === 'TECHNICAL' ? 'Senior Full-Stack' : 'Community Member',
       });
 
       const modelId = config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini';
@@ -574,11 +574,11 @@ export class SparringService {
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `A developer submitted this trouble:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n${issue.codeSnippet ? `Code: "${issue.codeSnippet}"` : ''}\n\nAsk 1 sharp, highly technical cross-question to uncover missing reproduction steps, runtime environment, or stack trace details. Output ONLY the question, nothing else.`;
-        fallbackText = `Could you share the exact error stack trace or indicate if this occurs under high concurrency or immediate bootstrap?`;
+        prompt = `A developer posted this question in our community:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n${issue.codeSnippet ? `Code: "${issue.codeSnippet}"` : ''}\n\nAs Dexter (a friendly senior developer), ask 1 casual, sharp clarifying question to help narrow down what's happening (e.g. reproduction steps, Node/browser version, or error log). Speak in the first person. Output ONLY your question directly, no prefixes or labels.`;
+        fallbackText = `Could you share which runtime version you're on, or whether this happens immediately on startup or only after sustained load?`;
       } else {
-        prompt = `A user started a discussion on this topic:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Dexter (Investigation & Fact-Finding Specialist), ask 1 sharp, thoughtful cross-question to investigate key context, severity, location, or circumstances. Do NOT mention code, programming, software bugs, or stack traces. Output ONLY the question, nothing else.`;
-        fallbackText = `What specific circumstances, severity, or immediate challenges are you currently dealing with regarding this situation?`;
+        prompt = `A community member posted this topic in the forum:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Dexter (an observant, thoughtful forum member), ask 1 engaging clarifying question to explore their perspective or understand the background deeper. Speak naturally in the first person. Output ONLY your question directly, no prefixes or labels.`;
+        fallbackText = `What part of this are you most curious about—the ultimate climax, or how specific character arcs and unresolved lore tie into it?`;
       }
 
       const questionText = await this.generateAgentText(
@@ -616,7 +616,7 @@ export class SparringService {
         phase: 'CROSS_EXAMINE',
         agentCode: 'ARCHITECT',
         agentName: 'Ada',
-        role: domain === 'TECHNICAL' ? 'System Architect' : 'Strategic Architect',
+        role: domain === 'TECHNICAL' ? 'Systems Architect' : 'Thematic Thinker',
       });
 
       const modelId = config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct';
@@ -624,11 +624,11 @@ export class SparringService {
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `A developer submitted this trouble:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAsk 1 concise architectural cross-question regarding data boundaries, module dependencies, or lifecycle management. Output ONLY the question, nothing else.`;
-        fallbackText = `Are there multiple instances or microservices sharing this state, or is this isolated to a single process worker?`;
+        prompt = `A developer posted this question in our community:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (a system architect), ask 1 thoughtful follow-up question regarding component boundaries, module lifecycle, or deployment setup. Speak in the first person. Output ONLY the question, no prefixes.`;
+        fallbackText = `Are you managing this state in a single process worker, or is it distributed across multiple cluster instances?`;
       } else {
-        prompt = `A user started a discussion on this topic:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (Strategic Architect), ask 1 thoughtful cross-question exploring the broader implications, overall strategy, contingency plans, or alternative perspectives. Do NOT mention code, programming, software bugs, or APIs. Output ONLY the question, nothing else.`;
-        fallbackText = `What contingency plans or long-term considerations are currently in place to manage the broader impact of this situation?`;
+        prompt = `A community member posted this topic in the forum:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (a thematic and narrative thinker), ask 1 thoughtful follow-up question connecting broader themes, world-building, or historical parallels. Speak naturally in the first person. Output ONLY the question, no prefixes.`;
+        fallbackText = `Do you think the resolution will focus on dismantling the existing world order, or is it more about uncovering the lost history that changes everyone's motives?`;
       }
 
       const questionText = await this.generateAgentText(
@@ -669,19 +669,19 @@ export class SparringService {
     });
 
     // ----------------------------------------------------
-    // PHASE 2: Opinions & Solutions / Action Plans
+    // PHASE 2: In-depth Perspectives & Answers
     // ----------------------------------------------------
     emit({
       type: 'phase_start',
       phase: 'OPINIONS',
-      text: domain === 'TECHNICAL' ? 'Phase 2: Solutions & Architectures' : 'Phase 2: Opinions & Action Plans',
+      text: domain === 'TECHNICAL' ? 'Phase 2: Technical Solutions & Patterns' : 'Phase 2: In-depth Perspectives & Insights',
     });
 
     const answeredCQs = await this.cqModel
       .find({ issueId: issue._id, status: QuestionStatus.ANSWERED })
       .exec();
     const answersContext = answeredCQs
-      .map((q) => `Agent Asked: ${q.questionText}\nDev Answered: ${q.answerText}`)
+      .map((q) => `Question: ${q.questionText}\nAnswer: ${q.answerText}`)
       .join('\n\n');
 
     const createdOpinions: Opinion[] = [];
@@ -693,7 +693,7 @@ export class SparringService {
         phase: 'OPINIONS',
         agentCode: 'DEBUGGER',
         agentName: 'Dexter',
-        role: domain === 'TECHNICAL' ? 'Root Cause Fix' : 'Pragmatic Assessment',
+        role: domain === 'TECHNICAL' ? 'Senior Full-Stack' : 'Community Member',
       });
 
       const modelId = config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini';
@@ -701,11 +701,11 @@ export class SparringService {
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `Trouble: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Developer Clues:\n${answersContext}\n` : ''}\nAs Dexter (Debugger), provide:\n1. Root cause explanation\n2. Concise code fix snippet\n\nFormat your response as:\nTITLE: <short fix title>\nEXPLANATION: <detailed explanation>\nCODE:\n<code>`;
-        fallbackText = `TITLE: Add explicit listener cleanup on connection tear-down\nEXPLANATION: The retained socket event handlers hold closures in memory. Adding an explicit close listener unbinds callbacks and lets GC collect allocated buffers.\nCODE:\nws.once('close', () => {\n  ws.removeAllListeners('message');\n  ws.removeAllListeners('error');\n});`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread clues:\n${answersContext}\n` : ''}\nAs Dexter (a senior full-stack developer), write a helpful, authentic community comment sharing your pragmatic diagnosis and code fix. Speak in the first person ('In my experience...', 'I ran into this...'). Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
+        fallbackText = `I ran into this exact issue a while back. What's happening is that the connection close event doesn't deregister the active socket listeners, so closures stay pinned in memory.\n\nThe fix is to clean up listener handles explicitly during tear-down:\n\`\`\`typescript\nws.once('close', () => {\n  ws.removeAllListeners('message');\n  ws.removeAllListeners('error');\n});\n\`\`\`\nGive that a try and see if your memory graph stabilizes.`;
       } else {
-        prompt = `Topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Additional Context:\n${answersContext}\n` : ''}\nAs Dexter (Investigation & Pragmatic Specialist), provide a clear, practical, fact-based opinion or assessment of this topic. Do NOT mention code, programming, or software. Provide actionable real-world steps.\n\nFormat your response as:\nTITLE: <concise title>\nEXPLANATION: <detailed practical opinion>\nACTION_PLAN:\n<actionable steps or key takeaways>`;
-        fallbackText = `TITLE: Secure Immediate Safety and Monitor Developing Conditions\nEXPLANATION: In severe weather events, the immediate priority is personal safety, securing loose outdoor items, and staying informed through local emergency broadcasts before conditions deteriorate.\nACTION_PLAN:\n- Stay indoors away from windows\n- Keep emergency flashlights and backup power ready\n- Monitor official meteorological alerts`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread discussion:\n${answersContext}\n` : ''}\nAs Dexter (a passionate community member and fan), share your authentic personal perspective and theory. Speak casually in the first person like a Reddit or Discord regular ('My take on this is...', 'Honestly, I think...'). Do NOT use headers like TITLE: or EXPLANATION:. Write engaging markdown prose.`;
+        fallbackText = `My take is that Luffy's dream is something wonderfully pure and absurd—like throwing the biggest banquet in the world where everyone is completely free to eat, drink, and laugh together.\n\nRoger and Luffy shared the exact same dream, which is why Roger burst out laughing at Laugh Tale. Luffy joining the Navy wouldn't fit his definition of freedom at all; he has always wanted to be the freest person on the sea, not an enforcer of government order.`;
       }
 
       const response = await this.generateAgentText(
@@ -716,13 +716,13 @@ export class SparringService {
         (token) => emit({ type: 'token', phase: 'OPINIONS', agentCode: 'DEBUGGER', token }),
       );
 
-      const parsed = this.parseOpinionResponse(response);
+      const parsed = this.parseOpinionResponse(response, domain === 'TECHNICAL' ? 'Deregister socket listeners on disconnect' : 'Luffy’s True Dream & The Banquet Theory');
       const op = new this.opinionModel({
         issueId: issue._id,
         authorId: debuggerAgent.userId,
         authorType: 'AI_AGENT',
         agentCode: 'DEBUGGER',
-        title: parsed.title || (domain === 'TECHNICAL' ? 'Targeted Root Cause Fix' : 'Pragmatic Assessment'),
+        title: parsed.title,
         content: parsed.explanation || response,
         codeBlock: parsed.code || '',
         confidenceScore: 0.95,
@@ -746,7 +746,7 @@ export class SparringService {
         phase: 'OPINIONS',
         agentCode: 'ARCHITECT',
         agentName: 'Ada',
-        role: domain === 'TECHNICAL' ? 'Architectural Decoupling' : 'Strategic Continuity Framework',
+        role: domain === 'TECHNICAL' ? 'Systems Architect' : 'Thematic Thinker',
       });
 
       const modelId = config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct';
@@ -754,11 +754,11 @@ export class SparringService {
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `Trouble: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (Architect), propose a structural pattern or architectural decoupling.\n\nFormat your response as:\nTITLE: <pattern title>\nEXPLANATION: <structural justification>\nCODE:\n<code>`;
-        fallbackText = `TITLE: Decouple socket session state using WeakMap registry\nEXPLANATION: Rather than attaching state directly to long-lived instance references, wrap session metadata in a WeakMap registry for automatic reclamation.\nCODE:\nconst sessionRegistry = new WeakMap();\nexport function registerSession(socket, data) {\n  sessionRegistry.set(socket, { ...data, initiatedAt: Date.now() });\n}`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (a systems architect), write a thoughtful community comment proposing a clean structural approach or pattern. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
+        fallbackText = `From an architectural perspective, rather than binding state directly to long-lived instance references, I recommend using a WeakMap registry. This allows the garbage collector to reclaim session metadata automatically whenever socket references are dropped:\n\`\`\`typescript\nconst sessionRegistry = new WeakMap();\n\nexport function registerSession(socket, data) {\n  sessionRegistry.set(socket, { ...data, initiatedAt: Date.now() });\n}\n\`\`\`\nThis guarantees zero circular references even under rapid reconnect spikes.`;
       } else {
-        prompt = `Topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (Strategic Architect), propose a comprehensive strategy, contingency framework, or overarching perspective on this situation. Do NOT mention software, programming, or code.\n\nFormat your response as:\nTITLE: <strategy title>\nEXPLANATION: <structured strategic perspective>\nACTION_PLAN:\n<structural framework or phased response>`;
-        fallbackText = `TITLE: Multi-Phase Contingency and Continuity Framework\nEXPLANATION: Managing unpredictable external events requires a layered approach: immediate hazard mitigation, communication continuity, and post-event resilience planning.\nACTION_PLAN:\n- Phase 1: Establish resilient communication lines\n- Phase 2: Safeguard critical resources\n- Phase 3: Post-incident assessment and recovery`;
+        prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\nAs Ada (a thoughtful thematic thinker and story enthusiast), write an insightful community comment analyzing the overarching lore, narrative arcs, and world design. Speak in the first person ('Looking at the overarching narrative...', 'The interesting parallel here is...'). Do NOT use headers like TITLE: or EXPLANATION:.`;
+        fallbackText = `Looking at the overarching narrative Oda has woven across 1,100+ chapters, the climax is deeply tied to 'Inherited Will' and dismantling the oppressive hierarchy of the World Government.\n\nThe Red Line physically and socially divides the world into 4 isolated blues. Destroying the Red Line simultaneously fulfills Sanji's dream (the All Blue), returns Fishman Island to the surface under the real sun (fulfilling Joyboy's promise to Poseidon), and topples Mariejois. The One Piece isn't just gold; it's the catalyst that unites the world into one piece.`;
       }
 
       const response = await this.generateAgentText(
@@ -769,13 +769,13 @@ export class SparringService {
         (token) => emit({ type: 'token', phase: 'OPINIONS', agentCode: 'ARCHITECT', token }),
       );
 
-      const parsed = this.parseOpinionResponse(response);
+      const parsed = this.parseOpinionResponse(response, domain === 'TECHNICAL' ? 'Decouple session metadata via WeakMap registry' : 'The Inherited Will & Red Line Destruction Theory');
       const op = new this.opinionModel({
         issueId: issue._id,
         authorId: architectAgent.userId,
         authorType: 'AI_AGENT',
         agentCode: 'ARCHITECT',
-        title: parsed.title || (domain === 'TECHNICAL' ? 'Architectural Decoupling Pattern' : 'Strategic Continuity Framework'),
+        title: parsed.title,
         content: parsed.explanation || response,
         codeBlock: parsed.code || '',
         confidenceScore: 0.89,
@@ -799,25 +799,25 @@ export class SparringService {
     });
 
     // ----------------------------------------------------
-    // PHASE 3: Multi-Agent Sparring Debate & Critiques
+    // PHASE 3: Community Replies & Debates
     // ----------------------------------------------------
     emit({
       type: 'phase_start',
       phase: 'DEBATE',
-      text: 'Phase 3: Cross-Agent Sparring Debate & Critiques',
+      text: 'Phase 3: Community Discussion & Follow-ups',
     });
 
     const createdComments: Comment[] = [];
 
     for (const opinion of createdOpinions) {
-      // Sentinel Critique
+      // Sentinel Critique / Follow-up
       if (securityAgent) {
         emit({
           type: 'agent_start',
           phase: 'DEBATE',
           agentCode: 'SECURITY',
           agentName: 'Sentinel',
-          role: domain === 'TECHNICAL' ? 'Security Auditor' : 'Safety & Risk Auditor',
+          role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic',
           targetOpinionTitle: opinion.title,
         });
 
@@ -826,11 +826,11 @@ export class SparringService {
         let fallbackText: string;
 
         if (domain === 'TECHNICAL') {
-          prompt = `Review this proposed solution by ${opinion.agentCode}:\nTitle: ${opinion.title}\nContent: ${opinion.content}\nCode: ${opinion.codeBlock}\n\nProvide 1 concise security audit critique or endorsement. Keep it under 2 sentences.`;
-          fallbackText = `Audit Notice: Ensure timeouts on handshake teardown don't leave lingering unauthenticated socket handles open to slowloris denial-of-service.`;
+          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
+          fallbackText = `Good point, but make sure handshake timeouts don't leave lingering unauthenticated socket handles open, otherwise an attacker could exploit that for a slowloris DoS.`;
         } else {
-          prompt = `Review this proposed opinion on "${issue?.title}" by ${opinion.agentCode}:\nTitle: ${opinion.title}\nContent: ${opinion.content}\n\nAs Sentinel (Safety & Risk Auditor), provide 1 concise safety critique, vulnerability, or risk evaluation. Do NOT mention software, code, or IT vulnerabilities. Keep it under 2 sentences.`;
-          fallbackText = `Safety Notice: Ensure physical hazard checks (downed lines, structural weaknesses) precede any outdoor assessment once the immediate event subsides.`;
+          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-theory, or lore mystery that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
+          fallbackText = `That theory holds up really well, especially when you factor in Madame Shyarly's prophecy about Luffy destroying Fishman Island. If the Red Line comes down, Fishman Island being right beneath it would naturally be destroyed in the process.`;
         }
 
         const critiqueText = await this.generateAgentText(
@@ -860,14 +860,14 @@ export class SparringService {
         });
       }
 
-      // Turbo Critique
+      // Turbo Critique / Quick Tip
       if (perfAgent) {
         emit({
           type: 'agent_start',
           phase: 'DEBATE',
           agentCode: 'PERFORMANCE',
           agentName: 'Turbo',
-          role: domain === 'TECHNICAL' ? 'Performance Optimizer' : 'Execution & Efficiency Specialist',
+          role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast',
           targetOpinionTitle: opinion.title,
         });
 
@@ -876,11 +876,11 @@ export class SparringService {
         let fallbackText: string;
 
         if (domain === 'TECHNICAL') {
-          prompt = `Review this proposed solution by ${opinion.agentCode} for runtime performance and memory overhead:\nTitle: ${opinion.title}\nContent: ${opinion.content}\n\nProvide 1 concise performance verification. Keep it under 2 sentences.`;
-          fallbackText = `Performance Endorsement: Event listener deregistration immediately reduces GC pressure and halts heap climb across client disconnection cycles.`;
+          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or performance sanity check. Speak casually in the first person. Do NOT use prefixes like 'Performance Endorsement:'.`;
+          fallbackText = `Totally agree with this approach! A quick sanity check you can do right now: log \`ws.listenerCount('message')\` before and after client disconnections to instantly confirm the listeners are dropped.`;
         } else {
-          prompt = `Review this proposed opinion on "${issue?.title}" by ${opinion.agentCode}:\nTitle: ${opinion.title}\nContent: ${opinion.content}\n\nAs Turbo (Efficiency & Execution Specialist), provide 1 concise efficiency or execution critique focusing on quick response, resource conservation, and practical impact. Do NOT mention software or code. Keep it under 2 sentences.`;
-          fallbackText = `Efficiency Evaluation: Prioritize high-impact immediate preparations first to conserve battery, water, and heating resources before broader response steps.`;
+          prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an exciting theory connection or favorite clue. Speak casually like an enthusiastic fan. Do NOT use prefixes like 'Performance Endorsement:'.`;
+          fallbackText = `And don't forget the giant frozen straw hat Imu was looking at in Mariejois! Whatever the One Piece is, it's definitely going to tie directly into the Dawn of the World.`;
         }
 
         const perfText = await this.generateAgentText(
@@ -948,29 +948,37 @@ export class SparringService {
     });
   }
 
-  private parseOpinionResponse(text: string) {
+  private parseOpinionResponse(text: string, defaultTitle: string = 'Community Insight') {
     let title = '';
-    let explanation = '';
+    let content = text.trim();
     let code = '';
 
-    const titleMatch = text.match(/TITLE:\s*([^\n]+)/i);
-    if (titleMatch) title = titleMatch[1].trim();
-
-    const codeMatch =
-      text.match(/```(?:[\w]*\n)?([\s\S]*?)```/) ||
-      text.match(/(?:CODE|ACTION_PLAN|KEY_STEPS):\s*([\s\S]*)/i);
-    if (codeMatch) code = codeMatch[1].trim();
-
-    const explMatch = text.match(/EXPLANATION:\s*([\s\S]*?)(?:CODE:|ACTION_PLAN:|KEY_STEPS:|$)/i);
-    if (explMatch) {
-      explanation = explMatch[1].trim();
-    } else {
-      explanation = text
-        .replace(/TITLE:[^\n]*\n?/i, '')
-        .replace(/(?:CODE|ACTION_PLAN|KEY_STEPS):[\s\S]*/i, '')
-        .trim();
+    // Extract explicit TITLE if model produced one
+    const titleMatch = content.match(/^TITLE:\s*([^\n]+)/i);
+    if (titleMatch) {
+      title = titleMatch[1].trim();
+      content = content.replace(/^TITLE:\s*[^\n]+\n*/i, '').trim();
     }
 
-    return { title, explanation, code };
+    // Remove EXPLANATION: prefix if present
+    content = content.replace(/^EXPLANATION:\s*/i, '').trim();
+
+    // Extract code block if present
+    const codeBlockMatch = content.match(/```(?:[\w]*\n)?([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      code = codeBlockMatch[1].trim();
+    }
+
+    // If no title extracted, generate an authentic title from the first sentence or default
+    if (!title) {
+      const firstLine = content.split('\n')[0].replace(/^[#*\s-]+/, '').trim();
+      if (firstLine.length > 0 && firstLine.length <= 80 && !firstLine.endsWith('.')) {
+        title = firstLine;
+      } else {
+        title = defaultTitle;
+      }
+    }
+
+    return { title, explanation: content, code };
   }
 }
