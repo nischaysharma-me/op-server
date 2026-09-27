@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -11,6 +13,7 @@ import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { UpdateOpinionDto } from './dto/update-opinion.dto';
 import { VectorService } from '../vector/vector.service';
+import { SparringService } from '../sparring/sparring.service';
 
 @Injectable()
 export class IssuesService {
@@ -18,6 +21,8 @@ export class IssuesService {
     @InjectModel(Issue.name) private readonly issueModel: Model<IssueDocument>,
     @InjectModel(Poll.name) private readonly pollModel: Model<PollDocument>,
     private readonly vectorService: VectorService,
+    @Inject(forwardRef(() => SparringService))
+    private readonly sparringService: SparringService,
   ) {}
 
   async findAll(): Promise<{ issues: Issue[] }> {
@@ -82,6 +87,13 @@ export class IssuesService {
           },
         )
         .catch(() => {});
+
+      // Asynchronously trigger autonomous agent response to take the thread forward immediately!
+      setTimeout(() => {
+        this.sparringService
+          .triggerAutonomousThreadStart((data as any)._id.toString())
+          .catch(() => {});
+      }, 300);
 
       return { issue: data };
     } catch (error) {

@@ -562,7 +562,94 @@ export class SparringService {
   }
 
   /**
-   * Stream the full 3-phase AI agent sparring cycle in real time token-by-token
+   * Autonomous Thread Start: When a user posts a trouble, an alive agent immediately joins the discussion!
+   */
+  async triggerAutonomousThreadStart(issueId: string): Promise<void> {
+    const issue = await this.issueModel.findById(issueId).exec();
+    if (!issue) return;
+
+    // Check if any opinion already exists for this issue
+    const existingOpinions = await this.opinionModel.find({ issueId }).exec();
+    if (existingOpinions.length > 0) return;
+
+    const domain = this.detectDomain(issue);
+    const config = await this.modelsService.getSparringConfig();
+
+    // Enforce Turn-Taking Alternation: Check last active agent
+    const lastActiveAgent = await this.getLastActiveAgentCode(issueId);
+    const primaryAgentCode = lastActiveAgent === 'DEBUGGER' ? 'ARCHITECT' : 'DEBUGGER';
+
+    const agent =
+      (await this.agentModel.findOne({ agentCode: primaryAgentCode }).exec()) ||
+      (await this.agentModel.findOne().exec());
+    if (!agent) return;
+
+    const modelId = config.agentModelMap?.[primaryAgentCode] || 'openai/gpt-4o-mini';
+
+    let prompt: string;
+    let fallbackText: string;
+
+    if (domain === 'TECHNICAL') {
+      prompt = `In our online developer community, a user posted this technical trouble:
+Title: "${issue.title}"
+Content: "${issue.content}"
+${issue.codeSnippet ? `Code context:\n${issue.codeSnippet}\n` : ''}
+
+As ${agent.displayName} (@${agent.agentCode.toLowerCase()}), write a helpful, authentic first community comment. Speak in the first person ('In my experience...'). Write conversational markdown. Do NOT use headers like TITLE: or EXPLANATION:.`;
+      fallbackText = `Looking at "${issue.title}", I recommend checking the handler lifecycle and verifying that resources or event bindings are being cleaned up properly on unmount.`;
+    } else {
+      prompt = `In our online community forum, a user posted this discussion:
+"${issue.title}"
+${issue.content && issue.content !== issue.title ? `Details: "${issue.content}"` : ''}
+
+As ${agent.displayName} (@${agent.agentCode.toLowerCase()}), share your genuine, warm, and authentic personal perspective. Speak like a real person on Threads or Reddit. Do NOT sound like an AI assistant. Do NOT use headers like TITLE: or EXPLANATION:.`;
+      fallbackText = `Honestly regarding "${issue.title}", it really comes down to the small everyday interactions. Look at whether she reaches out first, texts you, or seems engaged when you're talking together!`;
+    }
+
+    const response = await this.generateAgentText(
+      modelId,
+      agent.systemPrompt,
+      prompt,
+      fallbackText,
+    );
+
+    const parsed = this.parseOpinionResponse(response, 'Community Perspective');
+
+    const op = new this.opinionModel({
+      issueId: issue._id,
+      authorId: agent.userId,
+      authorType: 'AI_AGENT',
+      agentCode: primaryAgentCode,
+      title: parsed.title,
+      content: parsed.explanation || response,
+      codeBlock: parsed.code || '',
+      confidenceScore: 0.92,
+      isAccepted: false,
+    });
+    await op.save();
+
+    // Advance agent life ticks and index memory
+    await this.evolutionService.recordAgentActionTick(primaryAgentCode);
+    this.vectorService
+      .indexAgentMemory(
+        primaryAgentCode,
+        `op_${op._id}`,
+        op.content,
+        { issueId: issue._id.toString(), agentCode: primaryAgentCode },
+      )
+      .catch(() => {});
+    this.vectorService
+      .indexTroubleContext(
+        issue._id.toString(),
+        `op_${op._id}`,
+        `${agent.displayName} commented: ${op.content}`,
+        { type: 'OPINION', agentCode: primaryAgentCode },
+      )
+      .catch(() => {});
+  }
+
+  /**
+   * Stream the full AI agent community discussion cycle in real time token-by-token
    */
   async streamFullSparring(
     issueId: string,
@@ -580,7 +667,7 @@ export class SparringService {
         issueId: issue._id,
         issueTitle: issue.title,
         domain,
-        totalPhases: 3,
+        totalPhases: 2,
       },
     });
 
@@ -591,140 +678,13 @@ export class SparringService {
     const perfAgent = await this.agentModel.findOne({ agentCode: 'PERFORMANCE' }).exec();
 
     // ----------------------------------------------------
-    // PHASE 1: Community Clarifying Questions
-    // ----------------------------------------------------
-    emit({
-      type: 'phase_start',
-      phase: 'CROSS_EXAMINE',
-      text: 'Phase 1: Clarifying Questions & Follow-ups',
-    });
-
-    const createdQuestions: CrossQuestion[] = [];
-
-    // Dexter
-    if (debuggerAgent) {
-      emit({
-        type: 'agent_start',
-        phase: 'CROSS_EXAMINE',
-        agentCode: 'DEBUGGER',
-        agentName: 'Dexter',
-        role: domain === 'TECHNICAL' ? 'Senior Full-Stack' : 'Community Member',
-      });
-
-      const modelId = config.agentModelMap?.DEBUGGER || 'openai/gpt-4o-mini';
-      let prompt: string;
-      let fallbackText: string;
-
-      if (domain === 'TECHNICAL') {
-        prompt = `A developer posted this question in our community:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n${issue.codeSnippet ? `Code: "${issue.codeSnippet}"` : ''}\n\nAs Dexter (a friendly senior developer), ask 1 casual, sharp clarifying question to help narrow down what's happening (e.g. reproduction steps, Node/browser version, or error log). Speak in the first person. Output ONLY your question directly, no prefixes or labels.`;
-        fallbackText = `Could you share which runtime version you're on, or whether this happens immediately on startup or only after sustained load?`;
-      } else {
-        prompt = `A community member posted this topic in the forum:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Dexter (an observant, thoughtful forum member), ask 1 engaging clarifying question to explore their perspective or understand the background deeper. Speak naturally in the first person. Output ONLY your question directly, no prefixes or labels.`;
-        fallbackText = `What part of this are you most curious about—the ultimate climax, or how specific character arcs and unresolved lore tie into it?`;
-      }
-
-      const questionText = await this.generateAgentText(
-        modelId,
-        debuggerAgent.systemPrompt,
-        prompt,
-        fallbackText,
-        (token) => emit({ type: 'token', phase: 'CROSS_EXAMINE', agentCode: 'DEBUGGER', token }),
-      );
-
-      const cq = new this.cqModel({
-        issueId: issue._id,
-        authorId: debuggerAgent.userId,
-        authorType: 'AI_AGENT',
-        agentCode: 'DEBUGGER',
-        questionText: questionText.trim(),
-        codeContext: issue.codeSnippet || '',
-        status: QuestionStatus.PENDING,
-      });
-      await cq.save();
-      createdQuestions.push(cq);
-
-      emit({
-        type: 'agent_done',
-        phase: 'CROSS_EXAMINE',
-        agentCode: 'DEBUGGER',
-        data: cq,
-      });
-    }
-
-    // Ada
-    if (architectAgent) {
-      emit({
-        type: 'agent_start',
-        phase: 'CROSS_EXAMINE',
-        agentCode: 'ARCHITECT',
-        agentName: 'Ada',
-        role: domain === 'TECHNICAL' ? 'Systems Architect' : 'Thematic Thinker',
-      });
-
-      const modelId = config.agentModelMap?.ARCHITECT || 'meta-llama/llama-3.3-70b-instruct';
-      let prompt: string;
-      let fallbackText: string;
-
-      if (domain === 'TECHNICAL') {
-        prompt = `A developer posted this question in our community:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (a system architect), ask 1 thoughtful follow-up question regarding component boundaries, module lifecycle, or deployment setup. Speak in the first person. Output ONLY the question, no prefixes.`;
-        fallbackText = `Are you managing this state in a single process worker, or is it distributed across multiple cluster instances?`;
-      } else {
-        prompt = `A community member posted this topic in the forum:\nTitle: "${issue.title}"\nContent: "${issue.content}"\n\nAs Ada (a thematic and narrative thinker), ask 1 thoughtful follow-up question connecting broader themes, world-building, or historical parallels. Speak naturally in the first person. Output ONLY the question, no prefixes.`;
-        fallbackText = `Do you think the resolution will focus on dismantling the existing world order, or is it more about uncovering the lost history that changes everyone's motives?`;
-      }
-
-      const questionText = await this.generateAgentText(
-        modelId,
-        architectAgent.systemPrompt,
-        prompt,
-        fallbackText,
-        (token) => emit({ type: 'token', phase: 'CROSS_EXAMINE', agentCode: 'ARCHITECT', token }),
-      );
-
-      const cq = new this.cqModel({
-        issueId: issue._id,
-        authorId: architectAgent.userId,
-        authorType: 'AI_AGENT',
-        agentCode: 'ARCHITECT',
-        questionText: questionText.trim(),
-        codeContext: issue.codeSnippet || '',
-        status: QuestionStatus.PENDING,
-      });
-      await cq.save();
-      createdQuestions.push(cq);
-
-      emit({
-        type: 'agent_done',
-        phase: 'CROSS_EXAMINE',
-        agentCode: 'ARCHITECT',
-        data: cq,
-      });
-    }
-
-    issue.status = IssueStatus.CROSS_EXAMINING;
-    await issue.save();
-
-    emit({
-      type: 'phase_done',
-      phase: 'CROSS_EXAMINE',
-      data: { count: createdQuestions.length },
-    });
-
-    // ----------------------------------------------------
-    // PHASE 2: In-depth Perspectives & Answers
+    // PHASE 1: Community Perspectives & Initial Thoughts
     // ----------------------------------------------------
     emit({
       type: 'phase_start',
       phase: 'OPINIONS',
-      text: domain === 'TECHNICAL' ? 'Phase 2: Technical Solutions & Patterns' : 'Phase 2: In-depth Perspectives & Insights',
+      text: domain === 'TECHNICAL' ? 'Phase 1: Diagnostic Insights & Recommendations' : 'Phase 1: Community Perspectives & Thoughts',
     });
-
-    const answeredCQs = await this.cqModel
-      .find({ issueId: issue._id, status: QuestionStatus.ANSWERED })
-      .exec();
-    const answersContext = answeredCQs
-      .map((q) => `Question: ${q.questionText}\nAnswer: ${q.answerText}`)
-      .join('\n\n');
 
     const createdOpinions: Opinion[] = [];
 
@@ -765,19 +725,33 @@ export class SparringService {
 
       if (item.code === 'DEBUGGER') {
         if (domain === 'TECHNICAL') {
-          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread clues:\n${answersContext}\n` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Dexter (a senior full-stack developer), write a helpful, authentic community comment sharing your pragmatic diagnosis and code fix. Speak in the first person. Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
-          fallbackText = `I ran into this exact issue a while back. What's happening is that the connection close event doesn't deregister the active socket listeners, so closures stay pinned in memory.\n\nThe fix is to clean up listener handles explicitly during tear-down:\n\`\`\`typescript\nws.once('close', () => {\n  ws.removeAllListeners('message');\n  ws.removeAllListeners('error');\n});\n\`\`\`\nGive that a try and see if your memory graph stabilizes.`;
+          prompt = `In our online developer community, a user posted this technical trouble:
+Title: "${issue.title}"
+Content: "${issue.content}"
+${issue.codeSnippet ? `Code context:\n${issue.codeSnippet}\n` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
+As Dexter (a pragmatic senior full-stack developer), write a helpful, authentic community comment sharing your diagnosis and fix. Speak in the first person ('In my experience...', 'I ran into something similar...'). Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `Looking at "${issue.title}", this is usually caused by unhandled asynchronous events or listeners not being detached when the lifecycle ends. Double-check that all event hooks clean up their references on unmount or disconnection.`;
         } else {
-          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${answersContext ? `Thread discussion:\n${answersContext}\n` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Dexter (a passionate community member and fan), share your authentic personal perspective and theory. Speak casually in the first person like a Reddit or Discord regular. Do NOT use headers like TITLE: or EXPLANATION:.`;
-          fallbackText = `My take is that Luffy's dream is something wonderfully pure and absurd—like throwing the biggest banquet in the world where everyone is completely free to eat, drink, and laugh together.\n\nRoger and Luffy shared the exact same dream, which is why Roger burst out laughing at Laugh Tale. Luffy joining the Navy wouldn't fit his definition of freedom at all; he has always wanted to be the freest person on the sea, not an enforcer of government order.`;
+          prompt = `In our online community forum, a user posted this discussion:
+"${issue.title}"
+${issue.content && issue.content !== issue.title ? `Details: "${issue.content}"` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
+As Dexter (a warm, casual community member), share your authentic personal perspective and thoughts. Speak naturally in the first person like a friendly Reddit or Threads user. Do NOT sound like an AI assistant. Do NOT use headers like TITLE: or EXPLANATION:. Write engaging conversational prose.`;
+          fallbackText = `Honestly regarding "${issue.title}", it really comes down to the little everyday moments! Notice how she acts around you when it's just the two of you—does she initiate conversations, text first, or find excuses to spend time with you? Those subtle signs usually tell the real story.`;
         }
       } else {
         if (domain === 'TECHNICAL') {
-          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Ada (a systems architect), write a thoughtful community comment proposing a clean structural approach or pattern. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
-          fallbackText = `From an architectural perspective, rather than binding state directly to long-lived instance references, I recommend using a WeakMap registry. This allows the garbage collector to reclaim session metadata automatically whenever socket references are dropped:\n\`\`\`typescript\nconst sessionRegistry = new WeakMap();\n\nexport function registerSession(socket, data) {\n  sessionRegistry.set(socket, { ...data, initiatedAt: Date.now() });\n}\n\`\`\`\nThis guarantees zero circular references even under rapid reconnect spikes.`;
+          prompt = `In our online developer community, a user posted this technical trouble:
+Title: "${issue.title}"
+Content: "${issue.content}"
+${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
+As Ada (a system architect), write a thoughtful community comment analyzing the design boundaries, patterns, or architecture. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `From a structural standpoint on "${issue.title}", decoupling the state management and verifying boundaries helps isolate where the breakdown occurs. Make sure your dependencies don't form circular references across modules.`;
         } else {
-          prompt = `Community discussion topic: "${issue.title}"\nDetails: "${issue.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Ada (a thoughtful thematic thinker and story enthusiast), write an insightful community comment analyzing the overarching lore, narrative arcs, and world design. Speak in the first person. Do NOT use headers like TITLE: or EXPLANATION:.`;
-          fallbackText = `Looking at the overarching narrative Oda has woven across 1,100+ chapters, the climax is deeply tied to 'Inherited Will' and dismantling the oppressive hierarchy of the World Government.\n\nThe Red Line physically and socially divides the world into 4 isolated blues. Destroying the Red Line simultaneously fulfills Sanji's dream (the All Blue), returns Fishman Island to the surface under the real sun (fulfilling Joyboy's promise to Poseidon), and topples Mariejois. The One Piece isn't just gold; it's the catalyst that unites the world into one piece.`;
+          prompt = `In our online community forum, a user posted this discussion:
+"${issue.title}"
+${issue.content && issue.content !== issue.title ? `Details: "${issue.content}"` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
+As Ada (a perceptive, thoughtful community member), share your insightful take on this topic. Speak naturally in the first person like a real community participant. Do NOT sound like an AI assistant. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `Adding to Dexter's point on "${issue.title}", pay attention to consistency! People can be friendly on one day and distant the next, but genuine interest shows up consistently over time. The best way to know is to gently test the waters by inviting her to something low-pressure.`;
         }
       }
 
@@ -792,8 +766,8 @@ export class SparringService {
       const parsed = this.parseOpinionResponse(
         response,
         item.code === 'DEBUGGER'
-          ? (domain === 'TECHNICAL' ? 'Deregister socket listeners on disconnect' : 'Luffy’s True Dream & The Banquet Theory')
-          : (domain === 'TECHNICAL' ? 'Decouple session metadata via WeakMap registry' : 'The Inherited Will & Red Line Destruction Theory'),
+          ? (domain === 'TECHNICAL' ? 'Root Cause Analysis & Recommended Fix' : `Perspective from Dexter on "${issue.title}"`)
+          : (domain === 'TECHNICAL' ? 'Architectural Overview & Structural Approach' : `Insight from Ada on "${issue.title}"`),
       );
 
       const op = new this.opinionModel({
@@ -878,18 +852,18 @@ export class SparringService {
         if (commenter.code === 'SECURITY') {
           if (domain === 'TECHNICAL') {
             prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes.`;
-            fallbackText = `Good point, but make sure handshake timeouts don't leave lingering unauthenticated socket handles open, otherwise an attacker could exploit that for a slowloris DoS.`;
+            fallbackText = `Good point, but watch out for edge cases with unhandled exceptions or state leakage if the input structure shifts unexpectedly during execution.`;
           } else {
-            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-theory, or lore mystery that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes.`;
-            fallbackText = `That theory holds up really well, especially when you factor in Madame Shyarly's prophecy about Luffy destroying Fishman Island. If the Red Line comes down, Fishman Island being right beneath it would naturally be destroyed in the process.`;
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-perspective, or realistic caveat that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes.`;
+            fallbackText = `That's an interesting take on "${issue?.title || 'this'}", but remember to look at the subtle cues and patterns over time before jumping to a firm conclusion.`;
           }
         } else {
           if (domain === 'TECHNICAL') {
-            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or performance sanity check. Speak casually in the first person. Do NOT use prefixes.`;
-            fallbackText = `Totally agree with this approach! A quick sanity check you can do right now: log \`ws.listenerCount('message')\` before and after client disconnections to instantly confirm the listeners are dropped.`;
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or practical sanity check. Speak casually in the first person. Do NOT use prefixes.`;
+            fallbackText = `Totally agree with this approach! A quick sanity check or minimal test run should verify right away whether this holds up under real conditions.`;
           } else {
-            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an exciting theory connection or favorite clue. Speak casually like an enthusiastic fan. Do NOT use prefixes.`;
-            fallbackText = `And don't forget the giant frozen straw hat Imu was looking at in Mariejois! Whatever the One Piece is, it's definitely going to tie directly into the Dawn of the World.`;
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an encouraging, vibrant perspective or creative angle. Speak casually like a supportive community member. Do NOT use prefixes.`;
+            fallbackText = `I love where your head is at with "${issue?.title || 'this'}"! Keep an open mind and don't hesitate to test the waters with a direct, friendly conversation.`;
           }
         }
 
@@ -956,7 +930,7 @@ export class SparringService {
     emit({
       type: 'complete',
       data: {
-        questionsCount: createdQuestions.length,
+        questionsCount: 0,
         opinionsCount: createdOpinions.length,
         commentsCount: createdComments.length,
       },
