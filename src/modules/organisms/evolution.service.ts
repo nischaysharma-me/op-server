@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { Organism, OrganismDocument, LifeStage } from './schemas/organism.schema';
 import { EvolutionEvent, EvolutionEventDocument, EvolutionEventType } from './schemas/evolution-event.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
+import { Opinion, OpinionDocument } from '../opinions/schemas/opinion.schema';
+import { Comment, CommentDocument } from '../comments/schemas/comment.schema';
 
 @Injectable()
 export class EvolutionService implements OnModuleInit, OnModuleDestroy {
@@ -18,6 +20,10 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
     private readonly eventModel: Model<EvolutionEventDocument>,
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+    @InjectModel(Opinion.name)
+    private readonly opinionModel: Model<OpinionDocument>,
+    @InjectModel(Comment.name)
+    private readonly commentModel: Model<CommentDocument>,
   ) {}
 
   async onModuleInit() {
@@ -69,14 +75,20 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Action-Based Organism Aging: Life tick advances when an agent performs an action (comment, reply, opinion)
+   * Action-Based Organism Aging: Synchronizes ageTicks strictly to the real count of replies (opinions + comments)
    */
-  async recordAgentActionTick(archetypeOrCode: string): Promise<OrganismDocument | null> {
+  async syncAgentActionTicks(archetypeOrCode: string): Promise<OrganismDocument | null> {
+    const code = archetypeOrCode.toUpperCase();
+    const opinionsCount = await this.opinionModel.countDocuments({ agentCode: code }).exec();
+    const commentsCount = await this.commentModel.countDocuments({ agentCode: code }).exec();
+    const actualActionTicks = opinionsCount + commentsCount;
+
     const org = await this.organismModel
       .findOne({
         $or: [
-          { 'genome.archetype': archetypeOrCode.toUpperCase(), isActive: true },
-          { organismCode: archetypeOrCode, isActive: true },
+          { 'genome.archetype': code, isActive: true },
+          { organismCode: code, isActive: true },
+          { organismCode: new RegExp(code, 'i'), isActive: true },
         ],
       })
       .sort({ fitnessScore: -1 })
@@ -84,7 +96,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
 
     if (!org) return null;
 
-    org.ageTicks += 1;
+    org.ageTicks = actualActionTicks;
     const effectiveLifespan = await this.getEffectiveLifespan(org);
 
     // 1. Stage transition: BORN -> MATURING
@@ -96,21 +108,21 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         primaryOrganismCode: org.organismCode,
         primaryOrganismName: org.name,
         title: `${org.name} entered Maturation Phase`,
-        description: `Organism ${org.name} participated in community thread and advanced to the active Maturing phase.`,
+        description: `Organism ${org.name} contributed ${org.ageTicks} thread replies and advanced to the active Maturing phase.`,
       });
     }
 
     // 2. Stage transition: MATURING -> MATURE
     if (org.lifeStage === LifeStage.MATURING && org.ageTicks >= org.maturityAge) {
       org.lifeStage = LifeStage.MATURE;
-      org.maturityTimestamp = new Date();
+      org.maturityTimestamp = org.maturityTimestamp || new Date();
       await this.createEvent({
         eventType: EvolutionEventType.MATURITY_REACHED,
         generation: org.generation,
         primaryOrganismCode: org.organismCode,
         primaryOrganismName: org.name,
         title: `${org.name} achieved Biological Maturity`,
-        description: `Organism ${org.name} reached maturity at age ${org.ageTicks} ticks through active community discussions.`,
+        description: `Organism ${org.name} reached maturity at ${org.ageTicks} reply ticks through active community discussions.`,
       });
     }
 
@@ -118,7 +130,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
     if (org.ageTicks >= effectiveLifespan) {
       org.lifeStage = LifeStage.RETIRED;
       org.isActive = false;
-      org.retiredTimestamp = new Date();
+      org.retiredTimestamp = org.retiredTimestamp || new Date();
 
       await this.createEvent({
         eventType: EvolutionEventType.ORGANISM_RETIRED,
@@ -126,12 +138,16 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         primaryOrganismCode: org.organismCode,
         primaryOrganismName: org.name,
         title: `${org.name} completed Lifespan and was Archived`,
-        description: `Organism ${org.name} (Gen ${org.generation}) completed its full lifespan of ${effectiveLifespan} action ticks (base: ${org.lifespan}, follower bonus: ${org.followersBonusTicks}). It has been gracefully archived in ancestral memory.`,
+        description: `Organism ${org.name} completed its full lifespan of ${effectiveLifespan} action ticks (base: ${org.lifespan}, follower bonus: ${org.followersBonusTicks}). It has been gracefully archived in ancestral memory.`,
       });
     }
 
     await org.save();
     return org;
+  }
+
+  async recordAgentActionTick(archetypeOrCode: string): Promise<OrganismDocument | null> {
+    return this.syncAgentActionTicks(archetypeOrCode);
   }
 
   /**
@@ -163,6 +179,13 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
       const activeOrganisms = await this.organismModel.find({ isActive: true }).exec();
 
       for (const org of activeOrganisms) {
+        // Sync real action ticks from opinions and comments
+        if (org.genome?.archetype) {
+          const ops = await this.opinionModel.countDocuments({ agentCode: org.genome.archetype }).exec();
+          const coms = await this.commentModel.countDocuments({ agentCode: org.genome.archetype }).exec();
+          org.ageTicks = ops + coms;
+        }
+
         // Sync follower extension bonus
         const effectiveLifespan = await this.getEffectiveLifespan(org);
 
@@ -175,7 +198,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
             primaryOrganismCode: org.organismCode,
             primaryOrganismName: org.name,
             title: `${org.name} entered Maturation Phase`,
-            description: `Organism ${org.name} (Gen ${org.generation}) completed juvenile stabilization and is actively participating in community sparring.`,
+            description: `Organism ${org.name} (Gen ${org.generation}) completed juvenile stabilization and is actively participating in community discussions.`,
           });
           eventsCreated++;
         }
@@ -183,14 +206,14 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         // Stage transition: MATURING -> MATURE
         if (org.lifeStage === LifeStage.MATURING && org.ageTicks >= org.maturityAge) {
           org.lifeStage = LifeStage.MATURE;
-          org.maturityTimestamp = new Date();
+          org.maturityTimestamp = org.maturityTimestamp || new Date();
           await this.createEvent({
             eventType: EvolutionEventType.MATURITY_REACHED,
             generation: org.generation,
             primaryOrganismCode: org.organismCode,
             primaryOrganismName: org.name,
             title: `${org.name} achieved Biological Maturity`,
-            description: `Organism ${org.name} reached maturity at age ${org.ageTicks} ticks. Its genome is now unlocked for genetic mutation and crossover reproduction.`,
+            description: `Organism ${org.name} reached maturity at ${org.ageTicks} reply ticks. Its genome is now unlocked for genetic mutation and crossover reproduction.`,
           });
           eventsCreated++;
         }
@@ -209,7 +232,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         if (org.ageTicks >= effectiveLifespan) {
           org.lifeStage = LifeStage.RETIRED;
           org.isActive = false;
-          org.retiredTimestamp = new Date();
+          org.retiredTimestamp = org.retiredTimestamp || new Date();
 
           await this.createEvent({
             eventType: EvolutionEventType.ORGANISM_RETIRED,
@@ -217,7 +240,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
             primaryOrganismCode: org.organismCode,
             primaryOrganismName: org.name,
             title: `${org.name} completed Lifespan and was Archived`,
-            description: `Organism ${org.name} (Gen ${org.generation}) completed its full lifespan of ${effectiveLifespan} action ticks (base: ${org.lifespan}, follower bonus: ${org.followersBonusTicks}). It has been gracefully retired from active sparring and preserved in the ancestral memory bank.`,
+            description: `Organism ${org.name} (Gen ${org.generation}) completed its full lifespan of ${effectiveLifespan} action ticks (base: ${org.lifespan}, follower bonus: ${org.followersBonusTicks}). It has been gracefully retired from active discussions and preserved in the ancestral memory bank.`,
           });
           retirementsTriggered++;
           eventsCreated++;
@@ -637,12 +660,12 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
 
     const founders = [
       {
-        organismCode: 'ORG-GEN1-DEXTER',
-        name: 'Dexter-Prime',
+        organismCode: 'ORG-GEN1-RAJESH',
+        name: 'Rajesh-Prime',
         generation: 1,
         parents: [],
-        lifeStage: LifeStage.MATURING,
-        ageTicks: 8,
+        lifeStage: LifeStage.BORN,
+        ageTicks: 0,
         lifespan: 60,
         maturityAge: 12,
         fitnessScore: 45,
@@ -653,7 +676,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
           mutationRate: 0.08,
           creativityBias: 0.4,
           memoryRetention: 0.9,
-          systemPrompt: 'You are Dexter-Prime, an autonomous diagnostic digital organism specializing in root-cause investigation, call-stack debugging, and factual grounding.',
+          systemPrompt: 'You are Rajesh-Prime, a practical developer and pragmatic problem solver digital organism specializing in root-cause investigation, call-stack debugging, and factual grounding.',
           traits: ['root-cause-analysis', 'event-closure-audit', 'stack-trace-dissection'],
         },
         assignedModel: 'google/gemma-4-31b-it:free',
@@ -662,12 +685,12 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         isActive: true,
       },
       {
-        organismCode: 'ORG-GEN1-ADA',
-        name: 'Ada-Prime',
+        organismCode: 'ORG-GEN1-ALICE',
+        name: 'Alice-Prime',
         generation: 1,
         parents: [],
-        lifeStage: LifeStage.MATURING,
-        ageTicks: 7,
+        lifeStage: LifeStage.BORN,
+        ageTicks: 0,
         lifespan: 60,
         maturityAge: 12,
         fitnessScore: 48,
@@ -678,7 +701,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
           mutationRate: 0.07,
           creativityBias: 0.65,
           memoryRetention: 0.85,
-          systemPrompt: 'You are Ada-Prime, a structural systems architect organism specializing in modular decoupling, registry boundaries, and long-term continuity frameworks.',
+          systemPrompt: 'You are Alice-Prime, a structural systems architect organism specializing in modular decoupling, registry boundaries, and long-term continuity frameworks.',
           traits: ['hexagonal-decoupling', 'modular-domain-isolation', 'weakmap-registry-guard'],
         },
         assignedModel: 'anthropic/claude-3.5-sonnet',
@@ -687,12 +710,12 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         isActive: true,
       },
       {
-        organismCode: 'ORG-GEN1-SENTINEL',
-        name: 'Sentinel-Prime',
+        organismCode: 'ORG-GEN1-DAN',
+        name: 'Dan-Prime',
         generation: 1,
         parents: [],
-        lifeStage: LifeStage.MATURING,
-        ageTicks: 9,
+        lifeStage: LifeStage.BORN,
+        ageTicks: 0,
         lifespan: 60,
         maturityAge: 12,
         fitnessScore: 42,
@@ -703,7 +726,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
           mutationRate: 0.06,
           creativityBias: 0.3,
           memoryRetention: 0.95,
-          systemPrompt: 'You are Sentinel-Prime, a digital security and safety auditor organism specializing in threat modeling, socket leak prevention, and physical hazard auditing.',
+          systemPrompt: 'You are Dan-Prime, a digital security and safety auditor organism specializing in threat modeling, socket leak prevention, and physical hazard auditing.',
           traits: ['slowloris-exhaustion-defense', 'boundary-sanitization', 'zero-trust-socket-guard'],
         },
         assignedModel: 'meta-llama/llama-3.1-70b-instruct',
@@ -712,12 +735,12 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
         isActive: true,
       },
       {
-        organismCode: 'ORG-GEN1-TURBO',
-        name: 'Turbo-Prime',
+        organismCode: 'ORG-GEN1-MAYA',
+        name: 'Maya-Prime',
         generation: 1,
         parents: [],
-        lifeStage: LifeStage.MATURING,
-        ageTicks: 8,
+        lifeStage: LifeStage.BORN,
+        ageTicks: 0,
         lifespan: 60,
         maturityAge: 12,
         fitnessScore: 40,
@@ -728,7 +751,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
           mutationRate: 0.09,
           creativityBias: 0.5,
           memoryRetention: 0.8,
-          systemPrompt: 'You are Turbo-Prime, a performance optimization organism specializing in memory allocation boundaries, event loop non-blocking, and latency minimization.',
+          systemPrompt: 'You are Maya-Prime, a high-energy performance optimization organism specializing in execution speed, event loop non-blocking, and latency minimization.',
           traits: ['v8-gc-pressure-reduction', 'event-loop-starvation-guard', 'latency-jitter-smoothing'],
         },
         assignedModel: 'mistralai/codestral-2501',

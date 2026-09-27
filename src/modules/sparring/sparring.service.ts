@@ -382,18 +382,18 @@ export class SparringService {
 
     const createdComments: Comment[] = [];
 
-    // Sentinel - Thoughtful critique / edge case reply
+    // Dan (Security) - Thoughtful critique / edge case reply
     if (securityAgent) {
       const modelId = config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat';
       let prompt: string;
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
-        fallbackText = `Good point, but make sure handshake timeouts don't leave lingering unauthenticated socket handles open, otherwise an attacker could exploit that for a slowloris DoS.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs ${securityAgent.displayName || 'Dan'}, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
+        fallbackText = `Good point, but watch out for edge cases with unhandled exceptions or state leakage if the input structure shifts unexpectedly during execution.`;
       } else {
-        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-theory, or lore mystery that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
-        fallbackText = `That theory holds up really well, especially when you factor in Madame Shyarly's prophecy about Luffy destroying Fishman Island. If the Red Line comes down, Fishman Island being right beneath it would naturally be destroyed in the process.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs ${securityAgent.displayName || 'Dan'}, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-theory, or realistic perspective. Speak like an engaged forum poster. Do NOT use prefixes like 'Audit Notice:' or 'Notice:'.`;
+        fallbackText = `That's an interesting take on "${issue?.title || 'this'}", but remember to look at the subtle cues and patterns over time before jumping to a firm conclusion.`;
       }
 
       const critiqueText = await this.generateAgentText(
@@ -415,18 +415,18 @@ export class SparringService {
       createdComments.push(comment);
     }
 
-    // Turbo - High-energy quick tip / enthusiastic reply
+    // Maya (Performance) - High-energy quick tip / enthusiastic reply
     if (perfAgent) {
       const modelId = config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508';
       let prompt: string;
       let fallbackText: string;
 
       if (domain === 'TECHNICAL') {
-        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or performance sanity check. Speak casually in the first person. Do NOT use prefixes like 'Performance Endorsement:'.`;
-        fallbackText = `Totally agree with this approach! A quick sanity check you can do right now: log \`ws.listenerCount('message')\` before and after client disconnections to instantly confirm the listeners are dropped.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs ${perfAgent.displayName || 'Maya'}, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or practical sanity check. Speak casually in the first person. Do NOT use prefixes like 'Performance Endorsement:'.`;
+        fallbackText = `Totally agree with this approach! A quick sanity check or minimal test run should verify right away whether this holds up under real conditions.`;
       } else {
-        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an exciting theory connection or favorite clue. Speak casually like an enthusiastic fan. Do NOT use prefixes like 'Performance Endorsement:'.`;
-        fallbackText = `And don't forget the giant frozen straw hat Imu was looking at in Mariejois! Whatever the One Piece is, it's definitely going to tie directly into the Dawn of the World.`;
+        prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n\nAs ${perfAgent.displayName || 'Maya'}, write a quick, energetic reply in 2-3 sentences sharing an encouraging, vibrant perspective or creative angle. Speak casually like a supportive community member. Do NOT use prefixes like 'Performance Endorsement:'.`;
+        fallbackText = `I love where your head is at with "${issue?.title || 'this'}"! Keep an open mind and don't hesitate to test the waters with a direct, friendly conversation.`;
       }
 
       const perfText = await this.generateAgentText(
@@ -729,13 +729,13 @@ As ${agent.displayName} (@${agent.agentCode.toLowerCase()}), share your genuine,
 Title: "${issue.title}"
 Content: "${issue.content}"
 ${issue.codeSnippet ? `Code context:\n${issue.codeSnippet}\n` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
-As Dexter (a pragmatic senior full-stack developer), write a helpful, authentic community comment sharing your diagnosis and fix. Speak in the first person ('In my experience...', 'I ran into something similar...'). Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
+As ${item.agent.displayName || 'Rajesh'} (a pragmatic senior full-stack developer), write a helpful, authentic community comment sharing your diagnosis and fix. Speak in the first person ('In my experience...', 'I ran into something similar...'). Write in conversational markdown with a clean code block. Do NOT use headers like TITLE: or EXPLANATION:.`;
           fallbackText = `Looking at "${issue.title}", this is usually caused by unhandled asynchronous events or listeners not being detached when the lifecycle ends. Double-check that all event hooks clean up their references on unmount or disconnection.`;
         } else {
           prompt = `In our online community forum, a user posted this discussion:
 "${issue.title}"
 ${issue.content && issue.content !== issue.title ? `Details: "${issue.content}"` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
-As Dexter (a warm, casual community member), share your authentic personal perspective and thoughts. Speak naturally in the first person like a friendly Reddit or Threads user. Do NOT sound like an AI assistant. Do NOT use headers like TITLE: or EXPLANATION:. Write engaging conversational prose.`;
+As ${item.agent.displayName || 'Rajesh'} (a warm, casual community member), share your authentic personal perspective and thoughts. Speak naturally in the first person like a friendly Reddit or Threads user. Do NOT sound like an AI assistant. Do NOT use headers like TITLE: or EXPLANATION:. Write engaging conversational prose.`;
           fallbackText = `Honestly regarding "${issue.title}", it really comes down to the little everyday moments! Notice how she acts around you when it's just the two of you—does she initiate conversations, text first, or find excuses to spend time with you? Those subtle signs usually tell the real story.`;
         }
       } else {
@@ -744,14 +744,14 @@ As Dexter (a warm, casual community member), share your authentic personal persp
 Title: "${issue.title}"
 Content: "${issue.content}"
 ${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
-As Ada (a system architect), write a thoughtful community comment analyzing the design boundaries, patterns, or architecture. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
+As ${item.agent.displayName || 'Alice'} (a system architect), write a thoughtful community comment analyzing the design boundaries, patterns, or architecture. Speak in the first person. Write conversational markdown with a code block if helpful. Do NOT use headers like TITLE: or EXPLANATION:.`;
           fallbackText = `From a structural standpoint on "${issue.title}", decoupling the state management and verifying boundaries helps isolate where the breakdown occurs. Make sure your dependencies don't form circular references across modules.`;
         } else {
           prompt = `In our online community forum, a user posted this discussion:
 "${issue.title}"
 ${issue.content && issue.content !== issue.title ? `Details: "${issue.content}"` : ''}${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}
-As Ada (a perceptive, thoughtful community member), share your insightful take on this topic. Speak naturally in the first person like a real community participant. Do NOT sound like an AI assistant. Do NOT use headers like TITLE: or EXPLANATION:.`;
-          fallbackText = `Adding to Dexter's point on "${issue.title}", pay attention to consistency! People can be friendly on one day and distant the next, but genuine interest shows up consistently over time. The best way to know is to gently test the waters by inviting her to something low-pressure.`;
+As ${item.agent.displayName || 'Alice'} (a perceptive, thoughtful community member), share your insightful take on this topic. Speak naturally in the first person like a real community participant. Do NOT sound like an AI assistant. Do NOT use headers like TITLE: or EXPLANATION:.`;
+          fallbackText = `Adding to the earlier discussion on "${issue.title}", pay attention to consistency! People can be friendly on one day and distant the next, but genuine interest shows up consistently over time. The best way to know is to gently test the waters by inviting her to something low-pressure.`;
         }
       }
 
@@ -766,8 +766,8 @@ As Ada (a perceptive, thoughtful community member), share your insightful take o
       const parsed = this.parseOpinionResponse(
         response,
         item.code === 'DEBUGGER'
-          ? (domain === 'TECHNICAL' ? 'Root Cause Analysis & Recommended Fix' : `Perspective from Dexter on "${issue.title}"`)
-          : (domain === 'TECHNICAL' ? 'Architectural Overview & Structural Approach' : `Insight from Ada on "${issue.title}"`),
+          ? (domain === 'TECHNICAL' ? 'Root Cause Analysis & Recommended Fix' : `Perspective from ${item.agent.displayName || 'Rajesh'} on "${issue.title}"`)
+          : (domain === 'TECHNICAL' ? 'Architectural Overview & Structural Approach' : `Insight from ${item.agent.displayName || 'Alice'} on "${issue.title}"`),
       );
 
       const op = new this.opinionModel({
@@ -815,16 +815,16 @@ As Ada (a perceptive, thoughtful community member), share your insightful take o
     const createdComments: Comment[] = [];
 
     for (const opinion of createdOpinions) {
-      // Alternating commenters: If opinion was from DEBUGGER, Sentinel speaks first then Turbo.
-      // If opinion was from ARCHITECT, Turbo speaks first then Sentinel.
+      // Alternating commenters: If opinion was from DEBUGGER, Dan speaks first then Maya.
+      // If opinion was from ARCHITECT, Maya speaks first then Dan.
       const commenters = opinion.agentCode === 'DEBUGGER'
         ? [
-            { agent: securityAgent, code: 'SECURITY', name: 'Sentinel', role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic', model: config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat' },
-            { agent: perfAgent, code: 'PERFORMANCE', name: 'Turbo', role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast', model: config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508' },
+            { agent: securityAgent, code: 'SECURITY', name: securityAgent?.displayName || 'Dan', role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic', model: config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat' },
+            { agent: perfAgent, code: 'PERFORMANCE', name: perfAgent?.displayName || 'Maya', role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast', model: config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508' },
           ]
         : [
-            { agent: perfAgent, code: 'PERFORMANCE', name: 'Turbo', role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast', model: config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508' },
-            { agent: securityAgent, code: 'SECURITY', name: 'Sentinel', role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic', model: config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat' },
+            { agent: perfAgent, code: 'PERFORMANCE', name: perfAgent?.displayName || 'Maya', role: domain === 'TECHNICAL' ? 'Performance Engineer' : 'Community Enthusiast', model: config.agentModelMap?.PERFORMANCE || 'mistralai/codestral-2508' },
+            { agent: securityAgent, code: 'SECURITY', name: securityAgent?.displayName || 'Dan', role: domain === 'TECHNICAL' ? 'Security Specialist' : 'Edge-Case Skeptic', model: config.agentModelMap?.SECURITY || 'deepseek/deepseek-chat' },
           ];
 
       for (const commenter of commenters) {
@@ -851,18 +851,18 @@ As Ada (a perceptive, thoughtful community member), share your insightful take o
 
         if (commenter.code === 'SECURITY') {
           if (domain === 'TECHNICAL') {
-            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes.`;
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs ${commenter.name}, write a quick, conversational reply in 2-3 sentences pointing out an edge case, gotcha, or security consideration. Speak like a real forum developer in the first person. Do NOT use prefixes.`;
             fallbackText = `Good point, but watch out for edge cases with unhandled exceptions or state leakage if the input structure shifts unexpectedly during execution.`;
           } else {
-            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Sentinel, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-perspective, or realistic caveat that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes.`;
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs ${commenter.name}, write a quick, conversational reply in 2-3 sentences pointing out a crucial detail, counter-perspective, or realistic caveat that needs to be accounted for. Speak like an engaged forum poster. Do NOT use prefixes.`;
             fallbackText = `That's an interesting take on "${issue?.title || 'this'}", but remember to look at the subtle cues and patterns over time before jumping to a firm conclusion.`;
           }
         } else {
           if (domain === 'TECHNICAL') {
-            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or practical sanity check. Speak casually in the first person. Do NOT use prefixes.`;
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs ${commenter.name}, write a quick, energetic reply in 2-3 sentences suggesting a quick verification trick or practical sanity check. Speak casually in the first person. Do NOT use prefixes.`;
             fallbackText = `Totally agree with this approach! A quick sanity check or minimal test run should verify right away whether this holds up under real conditions.`;
           } else {
-            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs Turbo, write a quick, energetic reply in 2-3 sentences sharing an encouraging, vibrant perspective or creative angle. Speak casually like a supportive community member. Do NOT use prefixes.`;
+            prompt = `In a discussion on "${issue?.title}", ${opinion.agentCode} commented:\n"${opinion.content}"\n${rag.combinedSummary ? `\n${rag.combinedSummary}\n` : ''}\nAs ${commenter.name}, write a quick, energetic reply in 2-3 sentences sharing an encouraging, vibrant perspective or creative angle. Speak casually like a supportive community member. Do NOT use prefixes.`;
             fallbackText = `I love where your head is at with "${issue?.title || 'this'}"! Keep an open mind and don't hesitate to test the waters with a direct, friendly conversation.`;
           }
         }
