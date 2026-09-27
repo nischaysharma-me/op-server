@@ -10,12 +10,14 @@ import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
 import { UpdateOpinionDto } from './dto/update-opinion.dto';
+import { VectorService } from '../vector/vector.service';
 
 @Injectable()
 export class IssuesService {
   constructor(
     @InjectModel(Issue.name) private readonly issueModel: Model<IssueDocument>,
     @InjectModel(Poll.name) private readonly pollModel: Model<PollDocument>,
+    private readonly vectorService: VectorService,
   ) {}
 
   async findAll(): Promise<{ issues: Issue[] }> {
@@ -54,6 +56,25 @@ export class IssuesService {
     try {
       const issue = new this.issueModel(createIssueDto);
       const data = await issue.save();
+
+      // Index newly created trouble into its dedicated Pinecone vector DB namespace: trouble-{id}
+      const troubleText = `${data.title}\n\n${data.content}${
+        data.codeSnippet ? `\n\nCode Context:\n${data.codeSnippet}` : ''
+      }`;
+      this.vectorService
+        .indexTroubleContext(
+          (data as any)._id.toString(),
+          `trouble_root_${(data as any)._id}`,
+          troubleText,
+          {
+            title: data.title,
+            tags: data.tags || [],
+            creator: data.creator,
+            type: 'ROOT_TROUBLE',
+          },
+        )
+        .catch(() => {});
+
       return { issue: data };
     } catch (error) {
       throw new NotFoundException('Unable to posted Issue, Try Again!');

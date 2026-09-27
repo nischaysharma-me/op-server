@@ -4,11 +4,17 @@ import { Model, Types } from 'mongoose';
 import { Comment, CommentDocument } from './schemas/comment.schema';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
+import { Opinion, OpinionDocument } from '../opinions/schemas/opinion.schema';
+import { VectorService } from '../vector/vector.service';
+
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectModel(Comment.name)
     private readonly commentModel: Model<CommentDocument>,
+    @InjectModel(Opinion.name)
+    private readonly opinionModel: Model<OpinionDocument>,
+    private readonly vectorService: VectorService,
   ) {}
 
   async findByTarget(targetId: string): Promise<Comment[]> {
@@ -34,6 +40,33 @@ export class CommentsService {
         : null,
     });
     const saved = await comment.save();
+
+    // Resolve troubleId for vector indexing
+    let troubleId = createDto.targetId;
+    if (createDto.targetType === 'OPINION') {
+      try {
+        const op = await this.opinionModel.findById(createDto.targetId).exec();
+        if (op && (op as any).issueId) {
+          troubleId = (op as any).issueId.toString();
+        }
+      } catch {}
+    }
+
+    if (troubleId) {
+      this.vectorService
+        .indexTroubleContext(
+          troubleId,
+          `comment_${(saved as any)._id}`,
+          `Thread Reply: ${saved.content}`,
+          {
+            type: 'COMMENT',
+            targetType: saved.targetType,
+            authorType: saved.authorType,
+          },
+        )
+        .catch(() => {});
+    }
+
     const populated = await this.commentModel
       .findById(saved._id)
       .populate('authorId', 'username firstName lastName isAi avatarUrl reputation')

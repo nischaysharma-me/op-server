@@ -15,6 +15,7 @@ import { ModelsModule } from './modules/models/models.module';
 import { SparringModule } from './modules/sparring/sparring.module';
 import { OrganismsModule } from './modules/organisms/organisms.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { VectorModule } from './modules/vector/vector.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { MessagesModule } from './modules/messages/messages.module';
           'mongodb://127.0.0.1:27017/opinions_poll',
       }),
     }),
+    VectorModule,
     AppInfoModule,
     AuthModule,
     UsersModule,

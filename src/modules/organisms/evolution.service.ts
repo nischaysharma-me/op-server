@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Organism, OrganismDocument, LifeStage } from './schemas/organism.schema';
 import { EvolutionEvent, EvolutionEventDocument, EvolutionEventType } from './schemas/evolution-event.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
 
 @Injectable()
 export class EvolutionService implements OnModuleInit, OnModuleDestroy {
@@ -15,6 +16,8 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
     private readonly organismModel: Model<OrganismDocument>,
     @InjectModel(EvolutionEvent.name)
     private readonly eventModel: Model<EvolutionEventDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
 
   async onModuleInit() {
@@ -38,7 +41,101 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Core Autonomous Evolutionary Simulation Tick
+   * Calculates effective lifespan with human follower extension
+   */
+  async getEffectiveLifespan(org: OrganismDocument): Promise<number> {
+    let followersCount = 0;
+    try {
+      if (org.userId) {
+        const u = await this.userModel.findById(org.userId).select('followers').exec();
+        followersCount = u?.followers?.length || 0;
+      } else {
+        const baseName = org.name.toLowerCase().split('-')[0];
+        const u = await this.userModel.findOne({ username: baseName }).select('followers').exec();
+        followersCount = u?.followers?.length || 0;
+        if (u) {
+          org.userId = (u as any)._id;
+        }
+      }
+    } catch {}
+
+    if (followersCount > 0) {
+      org.followersBonusTicks = 50 + followersCount * 25;
+    } else {
+      org.followersBonusTicks = 0;
+    }
+
+    return org.lifespan + org.followersBonusTicks;
+  }
+
+  /**
+   * Action-Based Organism Aging: Life tick advances when an agent performs an action (comment, reply, opinion)
+   */
+  async recordAgentActionTick(archetypeOrCode: string): Promise<OrganismDocument | null> {
+    const org = await this.organismModel
+      .findOne({
+        $or: [
+          { 'genome.archetype': archetypeOrCode.toUpperCase(), isActive: true },
+          { organismCode: archetypeOrCode, isActive: true },
+        ],
+      })
+      .sort({ fitnessScore: -1 })
+      .exec();
+
+    if (!org) return null;
+
+    org.ageTicks += 1;
+    const effectiveLifespan = await this.getEffectiveLifespan(org);
+
+    // 1. Stage transition: BORN -> MATURING
+    if (org.lifeStage === LifeStage.BORN && org.ageTicks >= 3) {
+      org.lifeStage = LifeStage.MATURING;
+      await this.createEvent({
+        eventType: EvolutionEventType.ORGANISM_BORN,
+        generation: org.generation,
+        primaryOrganismCode: org.organismCode,
+        primaryOrganismName: org.name,
+        title: `${org.name} entered Maturation Phase`,
+        description: `Organism ${org.name} participated in community thread and advanced to the active Maturing phase.`,
+      });
+    }
+
+    // 2. Stage transition: MATURING -> MATURE
+    if (org.lifeStage === LifeStage.MATURING && org.ageTicks >= org.maturityAge) {
+      org.lifeStage = LifeStage.MATURE;
+      org.maturityTimestamp = new Date();
+      await this.createEvent({
+        eventType: EvolutionEventType.MATURITY_REACHED,
+        generation: org.generation,
+        primaryOrganismCode: org.organismCode,
+        primaryOrganismName: org.name,
+        title: `${org.name} achieved Biological Maturity`,
+        description: `Organism ${org.name} reached maturity at age ${org.ageTicks} ticks through active community discussions.`,
+      });
+    }
+
+    // 3. Lifespan check with follower extension
+    if (org.ageTicks >= effectiveLifespan) {
+      org.lifeStage = LifeStage.RETIRED;
+      org.isActive = false;
+      org.retiredTimestamp = new Date();
+
+      await this.createEvent({
+        eventType: EvolutionEventType.ORGANISM_RETIRED,
+        generation: org.generation,
+        primaryOrganismCode: org.organismCode,
+        primaryOrganismName: org.name,
+        title: `${org.name} completed Lifespan and was Archived`,
+        description: `Organism ${org.name} (Gen ${org.generation}) completed its full lifespan of ${effectiveLifespan} action ticks (base: ${org.lifespan}, follower bonus: ${org.followersBonusTicks}). It has been gracefully archived in ancestral memory.`,
+      });
+    }
+
+    await org.save();
+    return org;
+  }
+
+  /**
+   * Core Autonomous Evolutionary Simulation Tick (Ecosystem health, mutation checks, and follower sync)
    */
   async tickSimulation(): Promise<{
     tickTimestamp: Date;
@@ -66,9 +163,10 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
       const activeOrganisms = await this.organismModel.find({ isActive: true }).exec();
 
       for (const org of activeOrganisms) {
-        org.ageTicks += 1;
+        // Sync follower extension bonus
+        const effectiveLifespan = await this.getEffectiveLifespan(org);
 
-        // 1. Stage transition: BORN -> MATURING
+        // Stage transition: BORN -> MATURING
         if (org.lifeStage === LifeStage.BORN && org.ageTicks >= 3) {
           org.lifeStage = LifeStage.MATURING;
           await this.createEvent({
@@ -82,7 +180,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
           eventsCreated++;
         }
 
-        // 2. Stage transition: MATURING -> MATURE
+        // Stage transition: MATURING -> MATURE
         if (org.lifeStage === LifeStage.MATURING && org.ageTicks >= org.maturityAge) {
           org.lifeStage = LifeStage.MATURE;
           org.maturityTimestamp = new Date();
@@ -97,9 +195,8 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
           eventsCreated++;
         }
 
-        // 3. Mutation and Offspring Birth for Mature Organisms
+        // Mutation and Offspring Birth for Mature Organisms
         if (org.lifeStage === LifeStage.MATURE && org.reproductionCount < 2) {
-          // Trigger genetic mutation and birth of offspring
           const offspring = await this.executeGeneticMutation(org);
           if (offspring) {
             org.reproductionCount += 1;
@@ -108,8 +205,8 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
           }
         }
 
-        // 4. Lifespan Senescence: MATURE -> RETIRED (Discard from active rotation)
-        if (org.ageTicks >= org.lifespan) {
+        // Lifespan Senescence: only if ageTicks reached effectiveLifespan (extended by followers!)
+        if (org.ageTicks >= effectiveLifespan) {
           org.lifeStage = LifeStage.RETIRED;
           org.isActive = false;
           org.retiredTimestamp = new Date();
@@ -120,7 +217,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
             primaryOrganismCode: org.organismCode,
             primaryOrganismName: org.name,
             title: `${org.name} completed Lifespan and was Archived`,
-            description: `Organism ${org.name} (Gen ${org.generation}) completed its full lifespan of ${org.lifespan} simulation ticks. It has been gracefully retired from active sparring and preserved in the ancestral memory bank.`,
+            description: `Organism ${org.name} (Gen ${org.generation}) completed its full lifespan of ${effectiveLifespan} action ticks (base: ${org.lifespan}, follower bonus: ${org.followersBonusTicks}). It has been gracefully retired from active sparring and preserved in the ancestral memory bank.`,
           });
           retirementsTriggered++;
           eventsCreated++;

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type OrganismDocument = Organism & Document;
 
@@ -116,6 +116,12 @@ export class Organism {
 
   @Prop({ type: Date })
   retiredTimestamp?: Date;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  userId?: Types.ObjectId;
+
+  @Prop({ type: Number, default: 0 })
+  followersBonusTicks: number;
 }
 
 export const OrganismSchema = SchemaFactory.createForClass(Organism);
