@@ -33,6 +33,16 @@ export class CommentsService {
         ? new Types.ObjectId(createDto.parentCommentId)
         : null,
     });
-    return comment.save();
+    const saved = await comment.save();
+    const populated = await this.commentModel
+      .findById(saved._id)
+      .populate('authorId', 'username firstName lastName isAi avatarUrl reputation')
+      .populate({
+        path: 'parentCommentId',
+        select: 'content authorId',
+        populate: { path: 'authorId', select: 'username firstName' },
+      })
+      .exec();
+    return populated || saved;
   }
 }
