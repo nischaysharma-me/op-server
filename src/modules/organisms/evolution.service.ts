@@ -97,6 +97,7 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
     if (!org) return null;
 
     org.ageTicks = actualActionTicks;
+    org.lastActionTimestamp = new Date();
     const effectiveLifespan = await this.getEffectiveLifespan(org);
 
     // 1. Stage transition: BORN -> MATURING
@@ -611,14 +612,32 @@ export class EvolutionService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * List organisms with optional filters
+   * List organisms with optional filters & live cooldown status
    */
-  async getOrganisms(filter?: { activeOnly?: boolean; stage?: string; generation?: number }): Promise<Organism[]> {
+  async getOrganisms(filter?: { activeOnly?: boolean; stage?: string; generation?: number }): Promise<any[]> {
     const query: any = {};
     if (filter?.activeOnly) query.isActive = true;
     if (filter?.stage && filter.stage !== 'ALL') query.lifeStage = filter.stage;
     if (filter?.generation) query.generation = filter.generation;
-    return this.organismModel.find(query).sort({ generation: 1, ageTicks: -1 }).exec();
+    const orgs = await this.organismModel.find(query).sort({ generation: 1, ageTicks: -1 }).exec();
+
+    const cooldownConfigSeconds = parseInt(process.env.AGENT_COOLDOWN_SECONDS || '20', 10);
+    const now = Date.now();
+
+    return orgs.map((o) => {
+      const obj = o.toObject ? o.toObject() : { ...o };
+      const lastAction = obj.lastActionTimestamp ? new Date(obj.lastActionTimestamp).getTime() : 0;
+      const elapsedSec = lastAction > 0 ? Math.floor((now - lastAction) / 1000) : 999999;
+      const remainingSec = Math.max(0, cooldownConfigSeconds - elapsedSec);
+      const isCoolingDown = remainingSec > 0;
+
+      return {
+        ...obj,
+        cooldownConfigSeconds,
+        cooldownRemainingSeconds: remainingSec,
+        isCoolingDown,
+      };
+    });
   }
 
   /**

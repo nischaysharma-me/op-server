@@ -122,6 +122,9 @@ export class Organism {
 
   @Prop({ type: Number, default: 0 })
   followersBonusTicks: number;
+
+  @Prop({ type: Date, default: null })
+  lastActionTimestamp?: Date;
 }
 
 export const OrganismSchema = SchemaFactory.createForClass(Organism);

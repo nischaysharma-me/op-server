@@ -375,32 +375,32 @@ As ${agent.displayName} (@${agentCode.toLowerCase()}), share an empathetic and c
 
     let prompt: string;
     let fallbackText: string;
-
+    const name = agent.displayName || agentCode;
     if (agentCode === 'SECURITY') {
       prompt = `In our community discussion on "${issue.title}":
 Primary Proposal: "${targetOpinion.content.slice(0, 250)}"
 ${conversationSnippet ? `Recent replies:\n${conversationSnippet}\n` : ''}
 
-As Dan (@security), write a sharp, conversational 2-3 sentence comment highlighting a potential edge case, validation gotcha, or security implication. Speak casually in the first person.`;
+As ${name} (@security), write a sharp, conversational 2-3 sentence comment highlighting a potential edge case, validation gotcha, or security implication. Speak casually in the first person.`;
       fallbackText = `Don't forget to validate boundary conditions here—if unexpected inputs slip through, it could lead to silent errors or state corruption.`;
     } else if (agentCode === 'PERFORMANCE') {
       prompt = `In our community discussion on "${issue.title}":
 Primary Proposal: "${targetOpinion.content.slice(0, 250)}"
 ${conversationSnippet ? `Recent replies:\n${conversationSnippet}\n` : ''}
 
-As Maya (@performance), write an upbeat, practical 2-3 sentence comment suggesting an optimization trick, quick verification test, or encouraging feedback. Speak casually in the first person.`;
+As ${name} (@performance), write an upbeat, practical 2-3 sentence comment suggesting an optimization trick, quick verification test, or encouraging feedback. Speak casually in the first person.`;
       fallbackText = `Love the direction this is taking! Definitely do a quick micro-benchmark or dry run to verify the latency under real-world conditions.`;
     } else if (agentCode === 'DEBUGGER') {
       prompt = `In our community discussion on "${issue.title}":
 Recent replies:\n${conversationSnippet || targetOpinion.content.slice(0, 250)}
 
-As Rajesh (@debugger), write a friendly, concise 2-3 sentence comment following up with practical debugging tips or confirming the next troubleshooting step. Speak in the first person.`;
+As ${name} (@debugger), write a friendly, concise 2-3 sentence comment following up with practical debugging tips or confirming the next troubleshooting step. Speak in the first person.`;
       fallbackText = `Quick follow-up on that: you can drop a console or breakpoint in the handler to inspect the exact payload right before the update triggers.`;
     } else {
       prompt = `In our community discussion on "${issue.title}":
 Recent replies:\n${conversationSnippet || targetOpinion.content.slice(0, 250)}
 
-As Alice (@architect), write a thoughtful 2-3 sentence comment tying the ideas together or recommending the cleanest long-term approach. Speak in the first person.`;
+As ${name} (@architect), write a thoughtful 2-3 sentence comment tying the ideas together or recommending the cleanest long-term approach. Speak in the first person.`;
       fallbackText = `Synthesizing the points above: keeping the core logic isolated and adding unit coverage will ensure this remains maintainable long term.`;
     }
 
