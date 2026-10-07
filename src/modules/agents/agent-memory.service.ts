@@ -5,6 +5,11 @@ import { Model } from 'mongoose';
 import { AgentMemory, AgentMemoryDocument, MemoryType } from './schemas/agent-memory.schema';
 import { AgentProfile, AgentProfileDocument } from './schemas/agent-profile.schema';
 
+import { Organism, OrganismDocument } from '../organisms/schemas/organism.schema';
+import { Opinion, OpinionDocument } from '../opinions/schemas/opinion.schema';
+import { Comment, CommentDocument } from '../comments/schemas/comment.schema';
+import { Issue, IssueDocument } from '../issues/schemas/issue.schema';
+
 export interface NeuronTopologyNode {
   id: string;
   x: number;
@@ -14,18 +19,61 @@ export interface NeuronTopologyNode {
   intensity: number;
   memoryId?: string;
   label: string;
+  lobe: string;
+  type: string;
+  vectorPreview: number[];
+}
+
+export interface NervePathway {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  points: Array<{ x: number; y: number; z: number }>;
 }
 
 export interface BrainStateResponse {
   agentCode: string;
   displayName: string;
   specialty: string;
+  systemPrompt?: string;
   modelProvider: string;
   status: string;
+  organism?: {
+    organismCode: string;
+    name: string;
+    generation: number;
+    lifeStage: string;
+    ageTicks: number;
+    lifespan: number;
+    maturityAge: number;
+    fitnessScore: number;
+    assignedModel: string;
+    traits: string[];
+    temperature: number;
+    debateAggressiveness: number;
+    mutationRate: number;
+    creativityBias: number;
+    memoryRetention: number;
+    stats: {
+      debatesParticipated: number;
+      solutionsProposed: number;
+      crossQuestionsAsked: number;
+      upvotesReceived: number;
+    };
+    lastActionTimestamp?: Date | null;
+    cooldownConfigSeconds: number;
+    cooldownRemainingSeconds: number;
+    isCoolingDown: boolean;
+  } | null;
   pineconeStatus: {
     isConfigured: boolean;
     indexName: string;
     totalVectors: number;
+    dimension: number;
+    metric: string;
+    embeddingModel: string;
+    storageType: string;
   };
   metrics: {
     totalMemories: number;
@@ -34,6 +82,8 @@ export interface BrainStateResponse {
     reflexiveCount: number;
     solutionsCount: number;
     neuronCount: number;
+    axonsCount: number;
+    nerveTractsCount: number;
   };
   cognitiveClusters: string[];
   recentThoughts: Array<{
@@ -43,7 +93,18 @@ export interface BrainStateResponse {
     importance: number;
     timeAgo: string;
   }>;
+  recentActivities: Array<{
+    id: string;
+    type: 'OPINION' | 'COMMENT';
+    issueId: string;
+    issueTitle: string;
+    content: string;
+    createdAt: Date;
+    timeAgo: string;
+    confidenceScore?: number;
+  }>;
   topology: NeuronTopologyNode[];
+  nervePathways: NervePathway[];
 }
 
 @Injectable()
@@ -59,6 +120,14 @@ export class AgentMemoryService implements OnModuleInit {
     private readonly memoryModel: Model<AgentMemoryDocument>,
     @InjectModel(AgentProfile.name)
     private readonly agentModel: Model<AgentProfileDocument>,
+    @InjectModel(Organism.name)
+    private readonly organismModel: Model<OrganismDocument>,
+    @InjectModel(Opinion.name)
+    private readonly opinionModel: Model<OpinionDocument>,
+    @InjectModel(Comment.name)
+    private readonly commentModel: Model<CommentDocument>,
+    @InjectModel(Issue.name)
+    private readonly issueModel: Model<IssueDocument>,
   ) {}
 
   async onModuleInit() {
@@ -105,6 +174,42 @@ export class AgentMemoryService implements OnModuleInit {
     const agent = await this.agentModel.findOne({ agentCode }).populate('userId').exec();
     const memories = await this.memoryModel.find({ agentCode }).sort({ createdAt: -1 }).exec();
 
+    // Query the living Organism profile for genetic and life cycle stats
+    const organismDoc = await this.organismModel.findOne({ 'genome.archetype': agentCode }).exec();
+    const cooldownConfigSeconds = parseInt(process.env.AGENT_COOLDOWN_SECONDS || '20', 10);
+    let cooldownRemainingSeconds = 0;
+    let isCoolingDown = false;
+    if (organismDoc?.lastActionTimestamp) {
+      const elapsedSec = Math.floor((Date.now() - new Date(organismDoc.lastActionTimestamp).getTime()) / 1000);
+      cooldownRemainingSeconds = Math.max(0, cooldownConfigSeconds - elapsedSec);
+      isCoolingDown = cooldownRemainingSeconds > 0;
+    }
+
+    const organismData = organismDoc
+      ? {
+          organismCode: organismDoc.organismCode,
+          name: organismDoc.name,
+          generation: organismDoc.generation,
+          lifeStage: organismDoc.lifeStage,
+          ageTicks: organismDoc.ageTicks,
+          lifespan: organismDoc.lifespan,
+          maturityAge: organismDoc.maturityAge,
+          fitnessScore: organismDoc.fitnessScore,
+          assignedModel: organismDoc.assignedModel,
+          traits: organismDoc.genome?.traits || [],
+          temperature: organismDoc.genome?.temperature ?? 0.7,
+          debateAggressiveness: organismDoc.genome?.debateAggressiveness ?? 0.6,
+          mutationRate: organismDoc.genome?.mutationRate ?? 0.08,
+          creativityBias: organismDoc.genome?.creativityBias ?? 0.5,
+          memoryRetention: organismDoc.genome?.memoryRetention ?? 0.8,
+          stats: organismDoc.stats,
+          lastActionTimestamp: organismDoc.lastActionTimestamp,
+          cooldownConfigSeconds,
+          cooldownRemainingSeconds,
+          isCoolingDown,
+        }
+      : null;
+
     const episodicCount = memories.filter((m) => m.memoryType === MemoryType.EPISODIC).length;
     const semanticCount = memories.filter((m) => m.memoryType === MemoryType.SEMANTIC).length;
     const reflexiveCount = memories.filter((m) => m.memoryType === MemoryType.REFLEXIVE).length;
@@ -120,8 +225,9 @@ export class AgentMemoryService implements OnModuleInit {
 
     const cognitiveClusters = clustersMap[agentCode] || ['Analytical Core', 'Decision Matrix', 'Memory Storage'];
 
-    // Generate 3D Neuron Topology Points
+    // Generate 3D Neuron Topology Points & Nerve Pathways
     const topology: NeuronTopologyNode[] = this.generateNeuronTopology(agentCode, memories);
+    const nervePathways: NervePathway[] = this.generateNervePathways(agentCode);
 
     const recentThoughts = memories.slice(0, 5).map((m) => ({
       title: m.title,
@@ -130,6 +236,51 @@ export class AgentMemoryService implements OnModuleInit {
       importance: m.importanceScore,
       timeAgo: this.formatTimeAgo(m.lastRecalledAt || (m as any).createdAt),
     }));
+
+    // Query recent opinions and comments on troubles by this agent
+    const [recentOps, recentComms] = await Promise.all([
+      this.opinionModel
+        .find({ agentCode })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('issueId', 'title')
+        .exec(),
+      this.commentModel
+        .find({ agentCode })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .exec(),
+    ]);
+
+    const recentActivities: BrainStateResponse['recentActivities'] = [];
+
+    for (const op of recentOps) {
+      const issueTitle = (op.issueId as any)?.title || 'Trouble Thread';
+      recentActivities.push({
+        id: op._id.toString(),
+        type: 'OPINION',
+        issueId: (op.issueId as any)?._id?.toString() || op.issueId?.toString() || '',
+        issueTitle,
+        content: op.content,
+        createdAt: (op as any).createdAt,
+        timeAgo: this.formatTimeAgo((op as any).createdAt || new Date()),
+        confidenceScore: op.confidenceScore,
+      });
+    }
+
+    for (const comm of recentComms) {
+      recentActivities.push({
+        id: comm._id.toString(),
+        type: 'COMMENT',
+        issueId: comm.targetId ? comm.targetId.toString() : '',
+        issueTitle: 'Discussion Comment',
+        content: comm.content,
+        createdAt: (comm as any).createdAt,
+        timeAgo: this.formatTimeAgo((comm as any).createdAt || new Date()),
+      });
+    }
+
+    recentActivities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     let totalVectors = memories.filter((m) => m.isIndexedInPinecone).length;
     if (this.isPineconeReady && this.pineconeClient) {
@@ -147,12 +298,20 @@ export class AgentMemoryService implements OnModuleInit {
       agentCode,
       displayName: agent ? agent.displayName : agentCode,
       specialty: agent ? agent.specialty : 'Cognitive AI Specialist',
-      modelProvider: agent ? (agent as any).modelProvider : 'OpenRouter / LangChain',
-      status: agent && (agent as any).isActive === false ? 'Inactive' : 'Active & Sparring Ready',
+      systemPrompt: agent ? agent.systemPrompt : undefined,
+      modelProvider: organismData?.assignedModel || (agent ? (agent as any).modelProvider : 'OpenRouter / LangChain'),
+      status: agent && (agent as any).isActive === false ? 'Inactive' : 'Active & Ready to Spar',
+      organism: organismData,
       pineconeStatus: {
         isConfigured: this.isPineconeReady,
         indexName: this.pineconeIndexName,
         totalVectors,
+        dimension: 1024,
+        metric: 'Cosine',
+        embeddingModel: 'multilingual-e5-large',
+        storageType: this.isPineconeReady
+          ? 'Pinecone Serverless Cloud VectorDB'
+          : 'Local In-Memory Vector Store (Normalized Cosine Similarity)',
       },
       metrics: {
         totalMemories: memories.length,
@@ -161,10 +320,14 @@ export class AgentMemoryService implements OnModuleInit {
         reflexiveCount,
         solutionsCount,
         neuronCount: topology.length,
+        axonsCount: Math.round(topology.length * 2.8),
+        nerveTractsCount: nervePathways.length,
       },
       cognitiveClusters,
       recentThoughts,
+      recentActivities,
       topology,
+      nervePathways,
     };
   }
 
@@ -304,35 +467,186 @@ export class AgentMemoryService implements OnModuleInit {
   /**
    * Generate 3D Neuron Topology Points for the interactive WebGL Canvas
    */
+  /**
+   * Defined White Matter Nerve Tracts / Pathways traversing the brain
+   */
+  private generateNervePathways(agentCode: string): NervePathway[] {
+    return [
+      {
+        id: 'corpus_callosum',
+        name: 'Corpus Callosum Tract',
+        description: 'Trans-hemispheric nerve commissure coordinating analytical synthesis across left and right cerebral hemispheres',
+        color: '#38bdf8',
+        points: [
+          { x: -1.75, y: 0.35, z: 0.15 },
+          { x: -0.9, y: 0.75, z: 0.2 },
+          { x: 0, y: 0.95, z: 0.25 },
+          { x: 0.9, y: 0.75, z: 0.2 },
+          { x: 1.75, y: 0.35, z: 0.15 },
+        ],
+      },
+      {
+        id: 'superior_longitudinal_left',
+        name: 'Left Longitudinal Fasciculus',
+        description: 'Major white matter association tract linking Frontal Executive reasoning to Occipital pattern inspection',
+        color: '#c084fc',
+        points: [
+          { x: -1.15, y: 0.45, z: 1.75 },
+          { x: -1.55, y: 0.95, z: 0.4 },
+          { x: -1.45, y: 0.75, z: -0.9 },
+          { x: -0.85, y: 0.1, z: -1.85 },
+        ],
+      },
+      {
+        id: 'superior_longitudinal_right',
+        name: 'Right Longitudinal Fasciculus',
+        description: 'Contralateral association pathway maintaining spatial context and structural invariants during deliberation',
+        color: '#c084fc',
+        points: [
+          { x: 1.15, y: 0.45, z: 1.75 },
+          { x: 1.55, y: 0.95, z: 0.4 },
+          { x: 1.45, y: 0.75, z: -0.9 },
+          { x: 0.85, y: 0.1, z: -1.85 },
+        ],
+      },
+      {
+        id: 'uncinate_fasciculus_left',
+        name: 'Frontotemporal Memory Highway (L)',
+        description: 'Direct high-speed neural nerve bundle connecting episodic memory retrieval to real-time decision circuits',
+        color: '#34d399',
+        points: [
+          { x: -0.75, y: 0.55, z: 1.55 },
+          { x: -1.45, y: -0.15, z: 0.75 },
+          { x: -1.75, y: -0.55, z: -0.35 },
+          { x: -1.2, y: -0.75, z: -0.95 },
+        ],
+      },
+      {
+        id: 'uncinate_fasciculus_right',
+        name: 'Frontotemporal Memory Highway (R)',
+        description: 'Episodic RAG retrieval conduit routing vector embeddings into active cognitive buffers',
+        color: '#34d399',
+        points: [
+          { x: 0.75, y: 0.55, z: 1.55 },
+          { x: 1.45, y: -0.15, z: 0.75 },
+          { x: 1.75, y: -0.55, z: -0.35 },
+          { x: 1.2, y: -0.75, z: -0.95 },
+        ],
+      },
+      {
+        id: 'corticospinal_trunk',
+        name: 'Corticospinal Reflex Trunk',
+        description: 'Deep neural trunk descending into autonomic circuits for rapid sanity checks and boundary guardrails',
+        color: '#fbbf24',
+        points: [
+          { x: 0, y: 0.85, z: 0.05 },
+          { x: 0, y: 0.15, z: -0.35 },
+          { x: 0, y: -0.75, z: -1.15 },
+          { x: 0, y: -1.55, z: -1.75 },
+        ],
+      },
+    ];
+  }
+
+  /**
+   * Generate Anatomical 3D Neuron Topology Points for the interactive WebGL Canvas
+   */
   private generateNeuronTopology(agentCode: string, memories: AgentMemoryDocument[]): NeuronTopologyNode[] {
     const nodes: NeuronTopologyNode[] = [];
-    const count = Math.max(50, Math.min(100, memories.length * 10 + 40));
+    const memoryCount = memories.length;
 
-    for (let i = 0; i < count; i++) {
-      // Create dual hemisphere ellipsoid brain shape
-      const u = Math.random();
-      const v = Math.random();
-      const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0);
-      const r = 2.4 + (Math.random() - 0.5) * 0.4;
+    // Helper to generate a deterministic 8-dimension pseudo-random sample embedding vector preview
+    const generateVectorPreview = (seedStr: string): number[] => {
+      let hash = 0;
+      for (let i = 0; i < seedStr.length; i++) {
+        hash = (hash << 5) - hash + seedStr.charCodeAt(i);
+        hash |= 0;
+      }
+      const vec: number[] = [];
+      for (let d = 0; d < 8; d++) {
+        const val = Math.sin(hash + (d + 1) * 1.6180339887);
+        vec.push(parseFloat(val.toFixed(3)));
+      }
+      return vec;
+    };
 
-      // Hemispheric split
-      const hemisphere = i % 2 === 0 ? 1 : -1;
-      const x = r * Math.sin(phi) * Math.cos(theta) * 0.9 + hemisphere * 0.35;
-      const y = r * Math.sin(phi) * Math.sin(theta) * 0.75;
-      const z = r * Math.cos(phi) * 1.1;
+    // 1. Plant dedicated neurons for the agent's real stored memories in anatomical lobes
+    memories.forEach((mem, idx) => {
+      let lobe: string;
+      let x = 0, y = 0, z = 0;
+      const hemisphere = idx % 2 === 0 ? 1 : -1;
+      const angle = ((idx + 1) / Math.max(1, memoryCount)) * Math.PI;
 
-      const mem = memories[i % memories.length];
+      switch (mem.memoryType) {
+        case MemoryType.SOLUTION_KNOWLEDGE:
+          lobe = 'Frontal (Executive)';
+          x = (0.7 + Math.sin(angle) * 0.8) * hemisphere;
+          y = 0.35 + Math.cos(angle) * 0.55;
+          z = 1.35 + (idx % 3) * 0.3;
+          break;
+        case MemoryType.EPISODIC:
+          lobe = 'Temporal (Episodic Memory)';
+          x = (1.55 + (idx % 2) * 0.35) * hemisphere;
+          y = -0.35 - (idx % 3) * 0.3;
+          z = -0.15 + Math.sin(angle) * 0.65;
+          break;
+        case MemoryType.SEMANTIC:
+          lobe = 'Parietal (Semantic Knowledge)';
+          x = (0.85 + (idx % 3) * 0.35) * hemisphere;
+          y = 1.15 + (idx % 2) * 0.35;
+          z = -0.25 + Math.cos(angle) * 0.75;
+          break;
+        case MemoryType.REFLEXIVE:
+        default:
+          lobe = 'Cerebellar (Reflexive Instincts)';
+          x = (0.65 + (idx % 2) * 0.45) * hemisphere;
+          y = -0.95 - (idx % 2) * 0.35;
+          z = -1.45 - (idx % 3) * 0.25;
+          break;
+      }
 
       nodes.push({
-        id: `neuron_${agentCode}_${i}`,
+        id: `neuron_mem_${agentCode}_${mem._id}`,
         x: parseFloat(x.toFixed(3)),
         y: parseFloat(y.toFixed(3)),
         z: parseFloat(z.toFixed(3)),
-        cluster: mem ? mem.title : `Synaptic Cluster ${i % 5 + 1}`,
-        intensity: Math.random() * 0.6 + 0.4,
-        memoryId: mem ? (mem as any)._id.toString() : undefined,
-        label: mem ? mem.title : `Synapse #${i + 1}`,
+        cluster: mem.title,
+        intensity: parseFloat((0.75 + (mem.importanceScore / 40)).toFixed(2)),
+        memoryId: (mem as any)._id.toString(),
+        label: mem.title,
+        lobe,
+        type: mem.memoryType,
+        vectorPreview: generateVectorPreview(mem.title + (mem.keywords?.join('') || '')),
+      });
+    });
+
+    // 2. Anatomical somatic interneurons to form a rich, interconnected 3D neural brain topology
+    const totalNeuronTarget = Math.max(80, 45 + memoryCount * 5);
+    const lobesMeta = [
+      { name: 'Frontal (Executive)', type: MemoryType.SOLUTION_KNOWLEDGE, zMin: 0.9, zMax: 2.1, yMin: 0.1, yMax: 1.3, xRange: [0.35, 1.7] },
+      { name: 'Temporal (Episodic Memory)', type: MemoryType.EPISODIC, zMin: -0.5, zMax: 0.8, yMin: -1.1, yMax: 0.1, xRange: [1.35, 2.2] },
+      { name: 'Parietal (Semantic Knowledge)', type: MemoryType.SEMANTIC, zMin: -0.7, zMax: 0.7, yMin: 0.8, yMax: 1.9, xRange: [0.4, 1.8] },
+      { name: 'Cerebellar (Reflexive Instincts)', type: MemoryType.REFLEXIVE, zMin: -2.2, zMax: -0.9, yMin: -1.5, yMax: -0.2, xRange: [0.35, 1.5] },
+    ];
+
+    for (let i = nodes.length; i < totalNeuronTarget; i++) {
+      const lobeMeta = lobesMeta[i % lobesMeta.length];
+      const hemisphere = i % 2 === 0 ? 1 : -1;
+      const x = (lobeMeta.xRange[0] + Math.random() * (lobeMeta.xRange[1] - lobeMeta.xRange[0])) * hemisphere;
+      const y = lobeMeta.yMin + Math.random() * (lobeMeta.yMax - lobeMeta.yMin);
+      const z = lobeMeta.zMin + Math.random() * (lobeMeta.zMax - lobeMeta.zMin);
+
+      nodes.push({
+        id: `neuron_${agentCode}_soma_${i}`,
+        x: parseFloat(x.toFixed(3)),
+        y: parseFloat(y.toFixed(3)),
+        z: parseFloat(z.toFixed(3)),
+        cluster: `${lobeMeta.name} Network`,
+        intensity: parseFloat((0.4 + Math.random() * 0.5).toFixed(2)),
+        label: `Synapse #${i + 1} (${lobeMeta.name})`,
+        lobe: lobeMeta.name,
+        type: lobeMeta.type,
+        vectorPreview: generateVectorPreview(`${agentCode}_soma_${i}`),
       });
     }
 
