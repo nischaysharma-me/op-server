@@ -468,92 +468,142 @@ export class AgentMemoryService implements OnModuleInit {
    * Generate 3D Neuron Topology Points for the interactive WebGL Canvas
    */
   /**
-   * Defined White Matter Nerve Tracts / Pathways traversing the brain
+   * Defined White Matter Nerve Tracts / Pathways traversing directly through brain fissures and sulci
    */
   private generateNervePathways(agentCode: string): NervePathway[] {
     return [
       {
         id: 'corpus_callosum',
-        name: 'Corpus Callosum Tract',
-        description: 'Trans-hemispheric nerve commissure coordinating analytical synthesis across left and right cerebral hemispheres',
+        name: 'Trans-Hemispheric Corpus Callosum Bridge',
+        description: 'Deep commissural white matter tract bridging left and right cerebral hemispheres across the midline cleft',
         color: '#38bdf8',
         points: [
-          { x: -1.75, y: 0.35, z: 0.15 },
-          { x: -0.9, y: 0.75, z: 0.2 },
-          { x: 0, y: 0.95, z: 0.25 },
-          { x: 0.9, y: 0.75, z: 0.2 },
-          { x: 1.75, y: 0.35, z: 0.15 },
+          { x: -0.78, y: 0.85, z: 0.15 },
+          { x: -0.35, y: 0.95, z: 0.12 },
+          { x: 0.0, y: 0.98, z: 0.10 },
+          { x: 0.35, y: 0.95, z: 0.12 },
+          { x: 0.78, y: 0.85, z: 0.15 },
+        ],
+      },
+      {
+        id: 'longitudinal_fissure_nerve',
+        name: 'Longitudinal Fissure Dorsal Axis',
+        description: 'Main central median nerve conduit traveling directly through the central longitudinal divide from anterior pole to posterior occiput',
+        color: '#67e8f9',
+        points: [
+          { x: 0.0, y: 0.95, z: 1.55 },
+          { x: 0.0, y: 1.45, z: 0.95 },
+          { x: 0.0, y: 1.68, z: 0.10 },
+          { x: 0.0, y: 1.55, z: -0.75 },
+          { x: 0.0, y: 0.90, z: -1.55 },
         ],
       },
       {
         id: 'superior_longitudinal_left',
         name: 'Left Longitudinal Fasciculus',
-        description: 'Major white matter association tract linking Frontal Executive reasoning to Occipital pattern inspection',
+        description: 'Major dorsal association tract running along the left superior gyri from frontal pole to occipital cortex',
         color: '#c084fc',
         points: [
-          { x: -1.15, y: 0.45, z: 1.75 },
-          { x: -1.55, y: 0.95, z: 0.4 },
-          { x: -1.45, y: 0.75, z: -0.9 },
-          { x: -0.85, y: 0.1, z: -1.85 },
+          { x: -0.32, y: 0.95, z: 1.45 },
+          { x: -0.65, y: 1.52, z: 0.65 },
+          { x: -0.75, y: 1.62, z: -0.25 },
+          { x: -0.62, y: 1.48, z: -0.95 },
+          { x: -0.35, y: 0.85, z: -1.45 },
         ],
       },
       {
         id: 'superior_longitudinal_right',
         name: 'Right Longitudinal Fasciculus',
-        description: 'Contralateral association pathway maintaining spatial context and structural invariants during deliberation',
+        description: 'Contralateral dorsal association tract running along the right superior gyri from frontal pole to occipital cortex',
         color: '#c084fc',
         points: [
-          { x: 1.15, y: 0.45, z: 1.75 },
-          { x: 1.55, y: 0.95, z: 0.4 },
-          { x: 1.45, y: 0.75, z: -0.9 },
-          { x: 0.85, y: 0.1, z: -1.85 },
+          { x: 0.32, y: 0.95, z: 1.45 },
+          { x: 0.65, y: 1.52, z: 0.65 },
+          { x: 0.75, y: 1.62, z: -0.25 },
+          { x: 0.62, y: 1.48, z: -0.95 },
+          { x: 0.35, y: 0.85, z: -1.45 },
         ],
       },
       {
-        id: 'uncinate_fasciculus_left',
-        name: 'Frontotemporal Memory Highway (L)',
-        description: 'Direct high-speed neural nerve bundle connecting episodic memory retrieval to real-time decision circuits',
+        id: 'lateral_sulcus_left',
+        name: 'Left Sylvian / Lateral Sulcal Highway',
+        description: 'Deep lateral fissure nerve bundle connecting the temporal lobe to prefrontal decision circuits',
         color: '#34d399',
         points: [
-          { x: -0.75, y: 0.55, z: 1.55 },
-          { x: -1.45, y: -0.15, z: 0.75 },
-          { x: -1.75, y: -0.55, z: -0.35 },
-          { x: -1.2, y: -0.75, z: -0.95 },
+          { x: -0.42, y: 0.75, z: 1.15 },
+          { x: -0.77, y: 1.01, z: 0.32 },
+          { x: -1.05, y: 0.92, z: -0.25 },
+          { x: -0.85, y: 0.55, z: -0.75 },
         ],
       },
       {
-        id: 'uncinate_fasciculus_right',
-        name: 'Frontotemporal Memory Highway (R)',
-        description: 'Episodic RAG retrieval conduit routing vector embeddings into active cognitive buffers',
+        id: 'lateral_sulcus_right',
+        name: 'Right Sylvian / Lateral Sulcal Highway',
+        description: 'Right lateral fissure conduit coordinating temporal episodic memory retrieval with central motor and parietal hubs',
         color: '#34d399',
         points: [
-          { x: 0.75, y: 0.55, z: 1.55 },
-          { x: 1.45, y: -0.15, z: 0.75 },
-          { x: 1.75, y: -0.55, z: -0.35 },
-          { x: 1.2, y: -0.75, z: -0.95 },
+          { x: 0.42, y: 0.75, z: 1.15 },
+          { x: 0.77, y: 1.01, z: 0.32 },
+          { x: 1.05, y: 0.92, z: -0.25 },
+          { x: 0.85, y: 0.55, z: -0.75 },
         ],
       },
       {
-        id: 'corticospinal_trunk',
-        name: 'Corticospinal Reflex Trunk',
-        description: 'Deep neural trunk descending into autonomic circuits for rapid sanity checks and boundary guardrails',
+        id: 'precentral_crown_arch',
+        name: 'Coronal Precentral Sulcal Arch',
+        description: 'Bilateral coronal nerve arch sweeping across the top vertex crown between left and right motor regions',
         color: '#fbbf24',
         points: [
-          { x: 0, y: 0.85, z: 0.05 },
-          { x: 0, y: 0.15, z: -0.35 },
-          { x: 0, y: -0.75, z: -1.15 },
-          { x: 0, y: -1.55, z: -1.75 },
+          { x: -0.95, y: 1.15, z: 0.05 },
+          { x: -0.55, y: 1.62, z: 0.05 },
+          { x: 0.0, y: 1.70, z: 0.05 },
+          { x: 0.55, y: 1.62, z: 0.05 },
+          { x: 0.95, y: 1.15, z: 0.05 },
         ],
       },
     ];
   }
 
   /**
-   * Generate Anatomical 3D Neuron Topology Points for the interactive WebGL Canvas
+   * Generate Anatomical 3D Neuron Topology Points snapped directly to cortical Gyri & Sulci folds
    */
   private generateNeuronTopology(agentCode: string, memories: AgentMemoryDocument[]): NeuronTopologyNode[] {
     const nodes: NeuronTopologyNode[] = [];
     const memoryCount = memories.length;
+
+    // Load anatomical cortical gyri landmarks
+    let gyriLandmarks: Array<{ name: string; x: number; y: number; z: number }> = [];
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const rawGyri = require('./anatomical_gyri.json');
+      if (Array.isArray(rawGyri)) {
+        gyriLandmarks = rawGyri.filter((g) => {
+          const n = (g.name || '').toLowerCase();
+          return (
+            n.includes('gyrus') ||
+            n.includes('sulcus') ||
+            n.includes('pole') ||
+            n.includes('fasciculus') ||
+            n.includes('cerebell')
+          );
+        });
+      }
+    } catch {
+      // Handled by procedural fallback coordinates below
+    }
+
+    const frontalGyri = gyriLandmarks.filter(
+      (g) => g.name.toLowerCase().includes('frontal') || (g.z > 0.4 && g.y > 0.5)
+    );
+    const temporalGyri = gyriLandmarks.filter(
+      (g) => g.name.toLowerCase().includes('temporal') || (Math.abs(g.x) > 0.65 && g.y < 0.9 && g.z > -0.6)
+    );
+    const parietalGyri = gyriLandmarks.filter(
+      (g) => g.name.toLowerCase().includes('parietal') || (g.y > 1.2 && g.z <= 0.4 && g.z > -1.0)
+    );
+    const cerebellarGyri = gyriLandmarks.filter(
+      (g) => g.name.toLowerCase().includes('cerebell') || g.name.toLowerCase().includes('occipital') || g.z <= -0.7
+    );
 
     // Helper to generate a deterministic 8-dimension pseudo-random sample embedding vector preview
     const generateVectorPreview = (seedStr: string): number[] => {
@@ -570,39 +620,78 @@ export class AgentMemoryService implements OnModuleInit {
       return vec;
     };
 
-    // 1. Plant dedicated neurons for the agent's real stored memories in anatomical lobes
+    // 1. Plant dedicated neurons for the agent's real stored memories snapped directly to anatomical gyri
     memories.forEach((mem, idx) => {
       let lobe: string;
       let x = 0, y = 0, z = 0;
-      const hemisphere = idx % 2 === 0 ? 1 : -1;
-      const angle = ((idx + 1) / Math.max(1, memoryCount)) * Math.PI;
+      let gyrusName = '';
 
       switch (mem.memoryType) {
-        case MemoryType.SOLUTION_KNOWLEDGE:
+        case MemoryType.SOLUTION_KNOWLEDGE: {
           lobe = 'Frontal (Executive)';
-          x = (0.7 + Math.sin(angle) * 0.8) * hemisphere;
-          y = 0.35 + Math.cos(angle) * 0.55;
-          z = 1.35 + (idx % 3) * 0.3;
+          const g = frontalGyri.length > 0 ? frontalGyri[idx % frontalGyri.length] : null;
+          if (g) {
+            x = g.x;
+            y = g.y;
+            z = g.z;
+            gyrusName = g.name;
+          } else {
+            const h = idx % 2 === 0 ? 1 : -1;
+            x = 0.55 * h;
+            y = 1.15;
+            z = 1.1;
+          }
           break;
-        case MemoryType.EPISODIC:
+        }
+        case MemoryType.EPISODIC: {
           lobe = 'Temporal (Episodic Memory)';
-          x = (1.55 + (idx % 2) * 0.35) * hemisphere;
-          y = -0.35 - (idx % 3) * 0.3;
-          z = -0.15 + Math.sin(angle) * 0.65;
+          const g = temporalGyri.length > 0 ? temporalGyri[idx % temporalGyri.length] : null;
+          if (g) {
+            x = g.x;
+            y = g.y;
+            z = g.z;
+            gyrusName = g.name;
+          } else {
+            const h = idx % 2 === 0 ? 1 : -1;
+            x = 0.85 * h;
+            y = 0.45;
+            z = 0.2;
+          }
           break;
-        case MemoryType.SEMANTIC:
+        }
+        case MemoryType.SEMANTIC: {
           lobe = 'Parietal (Semantic Knowledge)';
-          x = (0.85 + (idx % 3) * 0.35) * hemisphere;
-          y = 1.15 + (idx % 2) * 0.35;
-          z = -0.25 + Math.cos(angle) * 0.75;
+          const g = parietalGyri.length > 0 ? parietalGyri[idx % parietalGyri.length] : null;
+          if (g) {
+            x = g.x;
+            y = g.y;
+            z = g.z;
+            gyrusName = g.name;
+          } else {
+            const h = idx % 2 === 0 ? 1 : -1;
+            x = 0.45 * h;
+            y = 1.55;
+            z = -0.4;
+          }
           break;
+        }
         case MemoryType.REFLEXIVE:
-        default:
+        default: {
           lobe = 'Cerebellar (Reflexive Instincts)';
-          x = (0.65 + (idx % 2) * 0.45) * hemisphere;
-          y = -0.95 - (idx % 2) * 0.35;
-          z = -1.45 - (idx % 3) * 0.25;
+          const g = cerebellarGyri.length > 0 ? cerebellarGyri[idx % cerebellarGyri.length] : null;
+          if (g) {
+            x = g.x;
+            y = g.y;
+            z = g.z;
+            gyrusName = g.name;
+          } else {
+            const h = idx % 2 === 0 ? 1 : -1;
+            x = 0.55 * h;
+            y = 0.45;
+            z = -1.25;
+          }
           break;
+        }
       }
 
       nodes.push({
@@ -610,8 +699,8 @@ export class AgentMemoryService implements OnModuleInit {
         x: parseFloat(x.toFixed(3)),
         y: parseFloat(y.toFixed(3)),
         z: parseFloat(z.toFixed(3)),
-        cluster: mem.title,
-        intensity: parseFloat((0.75 + (mem.importanceScore / 40)).toFixed(2)),
+        cluster: gyrusName || mem.title,
+        intensity: parseFloat((0.8 + (mem.importanceScore / 35)).toFixed(2)),
         memoryId: (mem as any)._id.toString(),
         label: mem.title,
         lobe,
@@ -620,30 +709,45 @@ export class AgentMemoryService implements OnModuleInit {
       });
     });
 
-    // 2. Anatomical somatic interneurons to form a rich, interconnected 3D neural brain topology
-    const totalNeuronTarget = Math.max(80, 45 + memoryCount * 5);
+    // 2. Anatomical somatic interneurons snapped directly to remaining gyri to form complete cortical network
+    const totalNeuronTarget = Math.max(90, 50 + memoryCount * 5);
     const lobesMeta = [
-      { name: 'Frontal (Executive)', type: MemoryType.SOLUTION_KNOWLEDGE, zMin: 0.9, zMax: 2.1, yMin: 0.1, yMax: 1.3, xRange: [0.35, 1.7] },
-      { name: 'Temporal (Episodic Memory)', type: MemoryType.EPISODIC, zMin: -0.5, zMax: 0.8, yMin: -1.1, yMax: 0.1, xRange: [1.35, 2.2] },
-      { name: 'Parietal (Semantic Knowledge)', type: MemoryType.SEMANTIC, zMin: -0.7, zMax: 0.7, yMin: 0.8, yMax: 1.9, xRange: [0.4, 1.8] },
-      { name: 'Cerebellar (Reflexive Instincts)', type: MemoryType.REFLEXIVE, zMin: -2.2, zMax: -0.9, yMin: -1.5, yMax: -0.2, xRange: [0.35, 1.5] },
+      { name: 'Frontal (Executive)', type: MemoryType.SOLUTION_KNOWLEDGE, gyri: frontalGyri },
+      { name: 'Temporal (Episodic Memory)', type: MemoryType.EPISODIC, gyri: temporalGyri },
+      { name: 'Parietal (Semantic Knowledge)', type: MemoryType.SEMANTIC, gyri: parietalGyri },
+      { name: 'Cerebellar (Reflexive Instincts)', type: MemoryType.REFLEXIVE, gyri: cerebellarGyri },
     ];
 
     for (let i = nodes.length; i < totalNeuronTarget; i++) {
       const lobeMeta = lobesMeta[i % lobesMeta.length];
-      const hemisphere = i % 2 === 0 ? 1 : -1;
-      const x = (lobeMeta.xRange[0] + Math.random() * (lobeMeta.xRange[1] - lobeMeta.xRange[0])) * hemisphere;
-      const y = lobeMeta.yMin + Math.random() * (lobeMeta.yMax - lobeMeta.yMin);
-      const z = lobeMeta.zMin + Math.random() * (lobeMeta.zMax - lobeMeta.zMin);
+      const gList = lobeMeta.gyri;
+      let x = 0, y = 0, z = 0;
+      let gyrusLabel = '';
+
+      if (gList.length > 0) {
+        const baseG = gList[i % gList.length];
+        // Jitter slightly along the cortical sulcus fold so multiple somas can populate the same gyrus
+        const jitter = (Math.sin(i * 3.7) * 0.05);
+        x = baseG.x + jitter;
+        y = baseG.y + (Math.cos(i * 2.3) * 0.04);
+        z = baseG.z + (Math.sin(i * 1.9) * 0.05);
+        gyrusLabel = baseG.name;
+      } else {
+        const hemisphere = i % 2 === 0 ? 1 : -1;
+        x = 0.6 * hemisphere;
+        y = 1.0;
+        z = 0.0;
+        gyrusLabel = `${lobeMeta.name} Fold`;
+      }
 
       nodes.push({
         id: `neuron_${agentCode}_soma_${i}`,
         x: parseFloat(x.toFixed(3)),
         y: parseFloat(y.toFixed(3)),
         z: parseFloat(z.toFixed(3)),
-        cluster: `${lobeMeta.name} Network`,
-        intensity: parseFloat((0.4 + Math.random() * 0.5).toFixed(2)),
-        label: `Synapse #${i + 1} (${lobeMeta.name})`,
+        cluster: gyrusLabel || `${lobeMeta.name} Network`,
+        intensity: parseFloat((0.45 + Math.random() * 0.5).toFixed(2)),
+        label: `Synapse #${i + 1} (${gyrusLabel || lobeMeta.name})`,
         lobe: lobeMeta.name,
         type: lobeMeta.type,
         vectorPreview: generateVectorPreview(`${agentCode}_soma_${i}`),

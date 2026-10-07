@@ -1,0 +1,2552 @@
+[
+  {
+    "name": "Anterior communicating artery",
+    "x": 0,
+    "y": 0.33,
+    "z": 0.56
+  },
+  {
+    "name": "Basilar venous plexus",
+    "x": 0,
+    "y": 0.17,
+    "z": 0.22
+  },
+  {
+    "name": "Cavernous sinus.r",
+    "x": -0.23,
+    "y": 0.2,
+    "z": 0.38
+  },
+  {
+    "name": "Cavernous sinus.l",
+    "x": 0.23,
+    "y": 0.2,
+    "z": 0.38
+  },
+  {
+    "name": "Anterior cerebral artery.l",
+    "x": 0.16,
+    "y": 0.51,
+    "z": 0.67
+  },
+  {
+    "name": "Anterior cerebral artery.r",
+    "x": -0.16,
+    "y": 0.51,
+    "z": 0.67
+  },
+  {
+    "name": "Anterior inferior cerebellar artery.l",
+    "x": 0.34,
+    "y": -0.17,
+    "z": -0.14
+  },
+  {
+    "name": "Anterior inferior cerebellar artery.r",
+    "x": -0.34,
+    "y": -0.17,
+    "z": -0.14
+  },
+  {
+    "name": "Anterior intercavernous sinus",
+    "x": 0,
+    "y": 0.26,
+    "z": 0.46
+  },
+  {
+    "name": "Anterior spinal artery.l",
+    "x": 0.13,
+    "y": -0.55,
+    "z": -0.27
+  },
+  {
+    "name": "Anterior spinal artery.r",
+    "x": -0.13,
+    "y": -0.55,
+    "z": -0.27
+  },
+  {
+    "name": "Basilar artery",
+    "x": 0,
+    "y": 0.17,
+    "z": 0.16
+  },
+  {
+    "name": "Callosomarginal artery.l",
+    "x": 0.21,
+    "y": 1.99,
+    "z": 0.89
+  },
+  {
+    "name": "Callosomarginal artery.r",
+    "x": -0.21,
+    "y": 1.99,
+    "z": 0.89
+  },
+  {
+    "name": "Distal lateral striate branches.l",
+    "x": 0.43,
+    "y": 0.57,
+    "z": 0.61
+  },
+  {
+    "name": "Distal lateral striate branches.r",
+    "x": -0.43,
+    "y": 0.57,
+    "z": 0.61
+  },
+  {
+    "name": "Frontal branches of callosomarginal artery.l",
+    "x": 0.15,
+    "y": 1.71,
+    "z": 1.09
+  },
+  {
+    "name": "Frontal branches of callosomarginal artery.r",
+    "x": -0.15,
+    "y": 1.71,
+    "z": 1.09
+  },
+  {
+    "name": "Inferior petrosal sinus.l",
+    "x": 0.53,
+    "y": -0.07,
+    "z": -0.03
+  },
+  {
+    "name": "Inferior petrosal sinus.r",
+    "x": -0.53,
+    "y": -0.07,
+    "z": -0.03
+  },
+  {
+    "name": "Inferior sagittal sinus",
+    "x": 0,
+    "y": 1.15,
+    "z": 0.06
+  },
+  {
+    "name": "Insular branches of middle cerebral artery (M2).r",
+    "x": -0.83,
+    "y": 0.65,
+    "z": 0.45
+  },
+  {
+    "name": "Insular branches of middle cerebral artery (M2-segment).l",
+    "x": 0.83,
+    "y": 0.65,
+    "z": 0.45
+  },
+  {
+    "name": "Internal carotid artery.l",
+    "x": 0.45,
+    "y": 0.2,
+    "z": 0.32
+  },
+  {
+    "name": "Internal carotid artery.r",
+    "x": -0.45,
+    "y": 0.2,
+    "z": 0.32
+  },
+  {
+    "name": "Lateral pontine branches of basilar artery.l",
+    "x": 0.22,
+    "y": -0.08,
+    "z": 0.02
+  },
+  {
+    "name": "Lateral pontine branches of basilar artery.r",
+    "x": -0.22,
+    "y": -0.08,
+    "z": 0.02
+  },
+  {
+    "name": "Medial pontine branches of basilar artery.l",
+    "x": 0.09,
+    "y": 0.01,
+    "z": 0.2
+  },
+  {
+    "name": "Medial pontine branches of basilar artery.r",
+    "x": -0.09,
+    "y": 0.01,
+    "z": 0.2
+  },
+  {
+    "name": "Middle cerebral artery (M1-segment).l",
+    "x": 0.46,
+    "y": 0.46,
+    "z": 0.53
+  },
+  {
+    "name": "Middle cerebral artery (M1-segment).r",
+    "x": -0.46,
+    "y": 0.46,
+    "z": 0.53
+  },
+  {
+    "name": "Middle cerebral artery (M3 segment).l",
+    "x": 1.04,
+    "y": 0.86,
+    "z": -0.26
+  },
+  {
+    "name": "Middle cerebral artery (M3-segment).r",
+    "x": -1.04,
+    "y": 0.86,
+    "z": -0.26
+  },
+  {
+    "name": "Occipital sinus",
+    "x": 0,
+    "y": -0.21,
+    "z": -0.23
+  },
+  {
+    "name": "Ophthalmic artery.l",
+    "x": 0.29,
+    "y": 0.18,
+    "z": 0.85
+  },
+  {
+    "name": "Ophthalmic artery.r",
+    "x": -0.29,
+    "y": 0.18,
+    "z": 0.85
+  },
+  {
+    "name": "Orbitofrontal branches of anterior cerebral artery.l",
+    "x": 0.16,
+    "y": 0.68,
+    "z": 1.2
+  },
+  {
+    "name": "Orbitofrontal branches of anterior cerebral artery.r",
+    "x": -0.16,
+    "y": 0.68,
+    "z": 1.2
+  },
+  {
+    "name": "Parietal branches of middle cerebral artery.l",
+    "x": 1.05,
+    "y": 1.62,
+    "z": -0.62
+  },
+  {
+    "name": "Parietal branches of middle cerebral artery.r",
+    "x": -1.05,
+    "y": 1.62,
+    "z": -0.62
+  },
+  {
+    "name": "Pericallosal artery.l",
+    "x": 0.28,
+    "y": 2.07,
+    "z": -0.12
+  },
+  {
+    "name": "Pericallosal artery.r",
+    "x": -0.28,
+    "y": 2.07,
+    "z": -0.12
+  },
+  {
+    "name": "Posterior cerebral artery.l",
+    "x": 0.53,
+    "y": 0.87,
+    "z": -0.42
+  },
+  {
+    "name": "Posterior cerebral artery.r",
+    "x": -0.53,
+    "y": 0.87,
+    "z": -0.42
+  },
+  {
+    "name": "Posterior communicating artery.l",
+    "x": 0.16,
+    "y": 0.26,
+    "z": 0.4
+  },
+  {
+    "name": "Posterior communicating artery.r",
+    "x": -0.16,
+    "y": 0.26,
+    "z": 0.4
+  },
+  {
+    "name": "Posterior inferior cerebellar artery.l",
+    "x": 0.55,
+    "y": -0.06,
+    "z": -0.75
+  },
+  {
+    "name": "Posterior inferior cerebellar artery.r",
+    "x": -0.55,
+    "y": -0.06,
+    "z": -0.75
+  },
+  {
+    "name": "Posterior intercavernous sinus",
+    "x": 0,
+    "y": 0.23,
+    "z": 0.37
+  },
+  {
+    "name": "Proximal lateral striate branches.l",
+    "x": 0.25,
+    "y": 0.54,
+    "z": 0.55
+  },
+  {
+    "name": "Proximal lateral striate branches.r",
+    "x": -0.25,
+    "y": 0.54,
+    "z": 0.55
+  },
+  {
+    "name": "Sigmoid sinus.l",
+    "x": 1.03,
+    "y": 0.01,
+    "z": -0.49
+  },
+  {
+    "name": "Sigmoid sinus.r",
+    "x": -1.03,
+    "y": 0.01,
+    "z": -0.49
+  },
+  {
+    "name": "Straight sinus",
+    "x": 0,
+    "y": 0.39,
+    "z": -0.06
+  },
+  {
+    "name": "Superior cerebellar artery.l",
+    "x": 0.43,
+    "y": 0.39,
+    "z": -0.44
+  },
+  {
+    "name": "Superior cerebellar artery.r",
+    "x": -0.43,
+    "y": 0.39,
+    "z": -0.44
+  },
+  {
+    "name": "Superior petrosal sinus.l",
+    "x": 0.72,
+    "y": 0.07,
+    "z": -0.22
+  },
+  {
+    "name": "Superior petrosal sinus.r",
+    "x": -0.72,
+    "y": 0.07,
+    "z": -0.22
+  },
+  {
+    "name": "Superior sagittal sinus",
+    "x": 0,
+    "y": 2.1,
+    "z": -0.08
+  },
+  {
+    "name": "Temporal branches of middle cerebral artery.l",
+    "x": 1.2,
+    "y": 0.86,
+    "z": -0.27
+  },
+  {
+    "name": "Temporal branches of middle cerebral artery.r",
+    "x": -1.2,
+    "y": 0.86,
+    "z": -0.27
+  },
+  {
+    "name": "Transverse sinus.l",
+    "x": 0.58,
+    "y": 0.02,
+    "z": -1.06
+  },
+  {
+    "name": "Transverse sinus.r",
+    "x": -0.58,
+    "y": 0.02,
+    "z": -1.06
+  },
+  {
+    "name": "Tentorium cerebelli.r",
+    "x": -0.58,
+    "y": 0.41,
+    "z": -0.68
+  },
+  {
+    "name": "Falx cerebri",
+    "x": 0,
+    "y": 2.07,
+    "z": -0.07
+  },
+  {
+    "name": "Choroid plexus.r",
+    "x": -0.35,
+    "y": 0.9,
+    "z": -0.09
+  },
+  {
+    "name": "Choroid plexus.l",
+    "x": 0.35,
+    "y": 0.9,
+    "z": -0.09
+  },
+  {
+    "name": "Temporal pole.l",
+    "x": 0.72,
+    "y": 0.32,
+    "z": 0.42
+  },
+  {
+    "name": "Occipital pole.l",
+    "x": 0.32,
+    "y": 0.59,
+    "z": -1.54
+  },
+  {
+    "name": "Central sulcus.l",
+    "x": 0.65,
+    "y": 1.85,
+    "z": -0.21
+  },
+  {
+    "name": "Parieto-occipital sulcus.l",
+    "x": 0.31,
+    "y": 1.53,
+    "z": -1.14
+  },
+  {
+    "name": "Subparietal sulcus.l",
+    "x": 0.11,
+    "y": 1.53,
+    "z": -0.89
+  },
+  {
+    "name": "Cingulate sulcus (Marginal part*).l",
+    "x": 0.19,
+    "y": 1.71,
+    "z": -0.63
+  },
+  {
+    "name": "Circular sulcus of insula.l",
+    "x": 0.77,
+    "y": 1.01,
+    "z": 0.32
+  },
+  {
+    "name": "Collateral sulcus.l",
+    "x": 0.46,
+    "y": 0.45,
+    "z": -0.63
+  },
+  {
+    "name": "Anterior occipital sulcus*.l",
+    "x": 0.83,
+    "y": 0.73,
+    "z": -1.16
+  },
+  {
+    "name": "Opercular part of inferior frontal gyrus.l",
+    "x": 0.91,
+    "y": 1.36,
+    "z": 0.53
+  },
+  {
+    "name": "Orbital part of  inferior frontal gyrus.l",
+    "x": 0.87,
+    "y": 0.79,
+    "z": 0.83
+  },
+  {
+    "name": "Triangular part of inferior frontal gyrus.l",
+    "x": 0.93,
+    "y": 1.31,
+    "z": 0.81
+  },
+  {
+    "name": "Orbital gyri (Frontomarginal gyrus and sulcus*).l",
+    "x": 0.5,
+    "y": 0.97,
+    "z": 1.43
+  },
+  {
+    "name": "Paracentral gyrus and sulcus*.l",
+    "x": 0.23,
+    "y": 2.06,
+    "z": -0.55
+  },
+  {
+    "name": "Transverse frontopolar gyrus and sulcus*.l",
+    "x": 0.26,
+    "y": 1.07,
+    "z": 1.53
+  },
+  {
+    "name": "Straight gyrus (Gyrus rectus).l",
+    "x": 0.12,
+    "y": 0.79,
+    "z": 1.06
+  },
+  {
+    "name": "Lat_Fis-ant-Vertical.l",
+    "x": 0.88,
+    "y": 1.1,
+    "z": 0.63
+  },
+  {
+    "name": "Inferior frontal sulcus.l",
+    "x": 0.8,
+    "y": 1.46,
+    "z": 0.76
+  },
+  {
+    "name": "Middle frontal gyrus.l",
+    "x": 0.63,
+    "y": 1.88,
+    "z": 0.76
+  },
+  {
+    "name": "Orbital gyri.l",
+    "x": 0.55,
+    "y": 0.76,
+    "z": 1.02
+  },
+  {
+    "name": "Precentral gyrus.l",
+    "x": 0.69,
+    "y": 2.03,
+    "z": 0
+  },
+  {
+    "name": "Superior frontal gyrus.l",
+    "x": 0.27,
+    "y": 2.05,
+    "z": 0.58
+  },
+  {
+    "name": "Superior frontal sulcus.l",
+    "x": 0.41,
+    "y": 1.96,
+    "z": 0.53
+  },
+  {
+    "name": "Paracentral sulcus.l",
+    "x": 0.51,
+    "y": 1.56,
+    "z": 1.15
+  },
+  {
+    "name": "Orbital sulci (H-shaped orbital sulci*).l",
+    "x": 0.58,
+    "y": 0.69,
+    "z": 1.08
+  },
+  {
+    "name": "Orbital sulci (Lateral Orbital sulcus*).l",
+    "x": 0.93,
+    "y": 0.94,
+    "z": 1.1
+  },
+  {
+    "name": "Olfactory sulcus.l",
+    "x": 0.3,
+    "y": 0.55,
+    "z": 0.85
+  },
+  {
+    "name": "Precentral sulcus (inferior part)*.l",
+    "x": 0.83,
+    "y": 1.72,
+    "z": 0.34
+  },
+  {
+    "name": "Precentral sulcus (Superior part)*.l",
+    "x": 0.6,
+    "y": 1.88,
+    "z": -0.06
+  },
+  {
+    "name": "Angular gyrus.l",
+    "x": 0.72,
+    "y": 1.61,
+    "z": -1.18
+  },
+  {
+    "name": "Supramarginal gyrus.l",
+    "x": 1.03,
+    "y": 1.63,
+    "z": -0.57
+  },
+  {
+    "name": "Postcentral gyrus.l",
+    "x": 0.76,
+    "y": 1.99,
+    "z": -0.26
+  },
+  {
+    "name": "Postcentral sulcus.l",
+    "x": 0.79,
+    "y": 1.87,
+    "z": -0.49
+  },
+  {
+    "name": "Precuneus.l",
+    "x": 0.15,
+    "y": 1.9,
+    "z": -1.06
+  },
+  {
+    "name": "Superior parietal lobule.l",
+    "x": 0.4,
+    "y": 1.9,
+    "z": -1.15
+  },
+  {
+    "name": "Intraparietal sulcus.l",
+    "x": 0.56,
+    "y": 1.54,
+    "z": -1
+  },
+  {
+    "name": "Inferior occipital gyrus and sulcus*.l",
+    "x": 0.68,
+    "y": 0.38,
+    "z": -1.25
+  },
+  {
+    "name": "Lingual gyrus.l",
+    "x": 0.3,
+    "y": 0.62,
+    "z": -1.17
+  },
+  {
+    "name": "Lateral occipital gyrus (Middle occipital gyrus*).l",
+    "x": 0.68,
+    "y": 0.98,
+    "z": -1.42
+  },
+  {
+    "name": "Calcarine sulcus.l",
+    "x": 0.22,
+    "y": 0.73,
+    "z": -1.17
+  },
+  {
+    "name": "Cuneus.l",
+    "x": 0.19,
+    "y": 1.02,
+    "z": -1.33
+  },
+  {
+    "name": "Superior occipital gyri.l",
+    "x": 0.32,
+    "y": 1.26,
+    "z": -1.58
+  },
+  {
+    "name": "Lunate sulcus.l",
+    "x": 0.64,
+    "y": 0.68,
+    "z": -1.5
+  },
+  {
+    "name": "Transverse occipital sulcus.l",
+    "x": 0.45,
+    "y": 0.94,
+    "z": -1.37
+  },
+  {
+    "name": "Transverse temporal gyri.l",
+    "x": 0.9,
+    "y": 0.9,
+    "z": -0.11
+  },
+  {
+    "name": "Temporal plane.l",
+    "x": 1.1,
+    "y": 1.2,
+    "z": -0.52
+  },
+  {
+    "name": "Superior temporal gyrus (Lateral part).l",
+    "x": 1.09,
+    "y": 0.97,
+    "z": -0.02
+  },
+  {
+    "name": "Lateral occipitotemporal gyrus.l",
+    "x": 0.71,
+    "y": 0.34,
+    "z": -0.57
+  },
+  {
+    "name": "Medial occipitotemporal gyrus (Parahippocampal*).l",
+    "x": 0.53,
+    "y": 0.54,
+    "z": -0.09
+  },
+  {
+    "name": "Inferior temporal sulcus.l",
+    "x": 0.83,
+    "y": 0.2,
+    "z": -0.11
+  },
+  {
+    "name": "Inferior temporal gyrus.l",
+    "x": 0.99,
+    "y": 0.63,
+    "z": -0.4
+  },
+  {
+    "name": "Middle temporal gyrus.l",
+    "x": 1.03,
+    "y": 0.85,
+    "z": -0.34
+  },
+  {
+    "name": "Superior temporal sulcus.l",
+    "x": 0.94,
+    "y": 1.16,
+    "z": -0.54
+  },
+  {
+    "name": "Occipitotemporal sulcus (Lateral part*).l",
+    "x": 0.87,
+    "y": 0.37,
+    "z": -0.74
+  },
+  {
+    "name": "Insula (Subcentral gyrus and ant. and post. sulci*).l",
+    "x": 1.05,
+    "y": 1.06,
+    "z": 0.09
+  },
+  {
+    "name": "Cingulate gyrus and sulcus (Middle anterior part).l",
+    "x": 0.11,
+    "y": 1.59,
+    "z": 0.44
+  },
+  {
+    "name": "Cingulate gyrus and sulcus (Middle posterior part).l",
+    "x": 0.15,
+    "y": 1.44,
+    "z": -0.12
+  },
+  {
+    "name": "Cingulate gyrus and sulcus (Posterior dorsal part).l",
+    "x": 0.1,
+    "y": 1.47,
+    "z": -0.59
+  },
+  {
+    "name": "Cingulate gyrus (Posteroventral part*).l",
+    "x": 0.15,
+    "y": 0.86,
+    "z": -0.67
+  },
+  {
+    "name": "Hippocampus.r",
+    "x": -0.51,
+    "y": 0.57,
+    "z": -0.03
+  },
+  {
+    "name": "Hippocampus.l",
+    "x": 0.51,
+    "y": 0.57,
+    "z": -0.03
+  },
+  {
+    "name": "Septal nuclei",
+    "x": 0,
+    "y": 0.57,
+    "z": 0.44
+  },
+  {
+    "name": "Caudate nucleus.r",
+    "x": -0.35,
+    "y": 1.06,
+    "z": 0.18
+  },
+  {
+    "name": "Caudate nucleus.l",
+    "x": 0.35,
+    "y": 1.06,
+    "z": 0.18
+  },
+  {
+    "name": "Putamen.r",
+    "x": -0.49,
+    "y": 0.95,
+    "z": 0.27
+  },
+  {
+    "name": "Putamen.l",
+    "x": 0.49,
+    "y": 0.95,
+    "z": 0.27
+  },
+  {
+    "name": "Corpus callosum",
+    "x": 0,
+    "y": 1.17,
+    "z": 0.05
+  },
+  {
+    "name": "Anterior commissure",
+    "x": 0,
+    "y": 0.62,
+    "z": 0.39
+  },
+  {
+    "name": "Hippocampal commissure",
+    "x": 0,
+    "y": 0.86,
+    "z": -0.19
+  },
+  {
+    "name": "Fornix.r",
+    "x": -0.3,
+    "y": 0.87,
+    "z": -0.04
+  },
+  {
+    "name": "Fornix.l",
+    "x": 0.3,
+    "y": 0.87,
+    "z": -0.04
+  },
+  {
+    "name": "Stria terminalis.r",
+    "x": -0.29,
+    "y": 0.88,
+    "z": 0.01
+  },
+  {
+    "name": "Stria terminalis.l",
+    "x": 0.29,
+    "y": 0.88,
+    "z": 0.01
+  },
+  {
+    "name": "White matter of telencephalon.l",
+    "x": 0.64,
+    "y": 1.99,
+    "z": -0.08
+  },
+  {
+    "name": "Lateral ventricle.r",
+    "x": -0.37,
+    "y": 1.09,
+    "z": -0.2
+  },
+  {
+    "name": "Lateral ventricle.l",
+    "x": 0.37,
+    "y": 1.09,
+    "z": -0.2
+  },
+  {
+    "name": "Septum pellucidum",
+    "x": 0,
+    "y": 1.01,
+    "z": 0.15
+  },
+  {
+    "name": "Lat_Fis-ant-Horizont.l",
+    "x": 0.83,
+    "y": 0.82,
+    "z": 0.78
+  },
+  {
+    "name": "Lat_Fis-post.l",
+    "x": 0.86,
+    "y": 1.09,
+    "z": -0.38
+  },
+  {
+    "name": " Posterior transverse collateral sulcus.l",
+    "x": 0.45,
+    "y": 0.23,
+    "z": -1.2
+  },
+  {
+    "name": "Sulcus interm_prim-Jensen.l",
+    "x": 0.92,
+    "y": 1.41,
+    "z": -0.91
+  },
+  {
+    "name": "Habenula",
+    "x": 0,
+    "y": 0.52,
+    "z": -0.25
+  },
+  {
+    "name": "Optic tract.r",
+    "x": -0.25,
+    "y": 0.43,
+    "z": 0.11
+  },
+  {
+    "name": "Optic tract.l",
+    "x": 0.25,
+    "y": 0.43,
+    "z": 0.11
+  },
+  {
+    "name": "Stria medullaris thalami.r",
+    "x": -0.07,
+    "y": 0.75,
+    "z": 0.05
+  },
+  {
+    "name": "Stria medullaris thalami.l",
+    "x": 0.1,
+    "y": 0.75,
+    "z": 0.05
+  },
+  {
+    "name": "Posterior commissure",
+    "x": 0,
+    "y": 0.47,
+    "z": -0.17
+  },
+  {
+    "name": "Third ventricle",
+    "x": 0,
+    "y": 0.75,
+    "z": 0.04
+  },
+  {
+    "name": "Lateral geniculate body.r",
+    "x": -0.54,
+    "y": 0.64,
+    "z": -0.3
+  },
+  {
+    "name": "Medial geniculate body.r",
+    "x": -0.48,
+    "y": 0.64,
+    "z": -0.31
+  },
+  {
+    "name": "Mamillary body.l",
+    "x": 0.06,
+    "y": 0.42,
+    "z": 0.21
+  },
+  {
+    "name": "Mamillary body.r",
+    "x": -0.06,
+    "y": 0.42,
+    "z": 0.21
+  },
+  {
+    "name": "Optic chiasm.r",
+    "x": -0.07,
+    "y": 0.43,
+    "z": 0.42
+  },
+  {
+    "name": "Lateral geniculate body.l",
+    "x": 0.56,
+    "y": 0.63,
+    "z": -0.28
+  },
+  {
+    "name": "Medial geniculate body.l",
+    "x": 0.5,
+    "y": 0.64,
+    "z": -0.29
+  },
+  {
+    "name": "Optic chiasm.l",
+    "x": 0.07,
+    "y": 0.43,
+    "z": 0.42
+  },
+  {
+    "name": "Base of peduncle.r",
+    "x": -0.22,
+    "y": 0.47,
+    "z": 0.09
+  },
+  {
+    "name": "Base of peduncle.l",
+    "x": 0.22,
+    "y": 0.47,
+    "z": 0.09
+  },
+  {
+    "name": "Nucleus of oculomotor nerve.l",
+    "x": 0.04,
+    "y": 0.31,
+    "z": -0.07
+  },
+  {
+    "name": "Nucleus of oculomotor nerve.r",
+    "x": -0.04,
+    "y": 0.31,
+    "z": -0.07
+  },
+  {
+    "name": "Red nucleus.l",
+    "x": 0.09,
+    "y": 0.44,
+    "z": 0.12
+  },
+  {
+    "name": "Red nucleus.r",
+    "x": -0.09,
+    "y": 0.44,
+    "z": 0.12
+  },
+  {
+    "name": "Aqueduct of midbrain",
+    "x": 0,
+    "y": 0.48,
+    "z": -0.13
+  },
+  {
+    "name": "Superior colliculus.r",
+    "x": -0.17,
+    "y": 0.43,
+    "z": -0.22
+  },
+  {
+    "name": "Superior colliculus.l",
+    "x": 0.17,
+    "y": 0.43,
+    "z": -0.22
+  },
+  {
+    "name": "Inferior colliculus.r",
+    "x": -0.14,
+    "y": 0.42,
+    "z": -0.21
+  },
+  {
+    "name": "Inferior colliculus.l",
+    "x": 0.14,
+    "y": 0.42,
+    "z": -0.21
+  },
+  {
+    "name": "Midbrain.r",
+    "x": -0.14,
+    "y": 0.46,
+    "z": -0.03
+  },
+  {
+    "name": "Interpeduncular fossa.l",
+    "x": 0.05,
+    "y": 0.42,
+    "z": 0.2
+  },
+  {
+    "name": "Interpeduncular fossa.r",
+    "x": -0.05,
+    "y": 0.42,
+    "z": 0.2
+  },
+  {
+    "name": "Midbrain.l",
+    "x": 0.14,
+    "y": 0.46,
+    "z": -0.03
+  },
+  {
+    "name": "Vestibular nuclei.l",
+    "x": 0.1,
+    "y": 0.07,
+    "z": -0.1
+  },
+  {
+    "name": "Vestibular nuclei.r",
+    "x": -0.1,
+    "y": 0.07,
+    "z": -0.1
+  },
+  {
+    "name": "Nucleus of abducens nerve.l",
+    "x": 0.03,
+    "y": -0.2,
+    "z": -0.2
+  },
+  {
+    "name": "Nucleus of abducens nerve.r",
+    "x": -0.03,
+    "y": -0.2,
+    "z": -0.2
+  },
+  {
+    "name": "Motor nucleus of facial nerve.l",
+    "x": 0.1,
+    "y": -0.22,
+    "z": -0.1
+  },
+  {
+    "name": "Motor nucleus of facial nerve.r",
+    "x": -0.1,
+    "y": -0.22,
+    "z": -0.1
+  },
+  {
+    "name": "Superior salivatory nucleus.l",
+    "x": 0.13,
+    "y": -0.27,
+    "z": -0.12
+  },
+  {
+    "name": "Superior salivatory nucleus.r",
+    "x": -0.13,
+    "y": -0.27,
+    "z": -0.12
+  },
+  {
+    "name": "Pons.r",
+    "x": -0.2,
+    "y": 0.18,
+    "z": -0.06
+  },
+  {
+    "name": "Pons.l",
+    "x": 0.2,
+    "y": 0.18,
+    "z": -0.06
+  },
+  {
+    "name": "Fourth ventricle",
+    "x": 0,
+    "y": 0.15,
+    "z": -0.37
+  },
+  {
+    "name": "Medulla oblongata.l",
+    "x": 0.13,
+    "y": -0.29,
+    "z": -0.28
+  },
+  {
+    "name": "Pyramid of medulla oblongata.l",
+    "x": 0.07,
+    "y": -0.34,
+    "z": -0.11
+  },
+  {
+    "name": "Olive.r",
+    "x": -0.17,
+    "y": -0.32,
+    "z": -0.2
+  },
+  {
+    "name": "Olive.l",
+    "x": 0.17,
+    "y": -0.32,
+    "z": -0.2
+  },
+  {
+    "name": "Pyramid of medulla oblongata.r",
+    "x": -0.07,
+    "y": -0.34,
+    "z": -0.11
+  },
+  {
+    "name": "Sensory root of trigeminal nerve.r",
+    "x": -0.09,
+    "y": 0.31,
+    "z": -0.3
+  },
+  {
+    "name": "Sensory root of trigeminal nerve.l",
+    "x": 0.09,
+    "y": 0.31,
+    "z": -0.3
+  },
+  {
+    "name": "Motor root of trigeminal nerve.l",
+    "x": 0.15,
+    "y": -0.05,
+    "z": -0.1
+  },
+  {
+    "name": "Motor root of trigeminal nerve.r",
+    "x": -0.15,
+    "y": -0.05,
+    "z": -0.1
+  },
+  {
+    "name": "Wing of central lobule.l",
+    "x": 0.19,
+    "y": 0.24,
+    "z": -0.27
+  },
+  {
+    "name": "Uvula of vermis",
+    "x": 0.01,
+    "y": -0.17,
+    "z": -0.69
+  },
+  {
+    "name": "Tuber of vermis",
+    "x": 0,
+    "y": -0.11,
+    "z": -0.99
+  },
+  {
+    "name": "Tonsil of cerebellum.l",
+    "x": 0.24,
+    "y": -0.25,
+    "z": -0.52
+  },
+  {
+    "name": "Superior semilunar lobule.l",
+    "x": 0.48,
+    "y": 0.07,
+    "z": -0.88
+  },
+  {
+    "name": "Superior cerebellar peduncle.l",
+    "x": 0.18,
+    "y": 0.17,
+    "z": -0.39
+  },
+  {
+    "name": "Pyramis of vermis",
+    "x": 0,
+    "y": -0.18,
+    "z": -0.9
+  },
+  {
+    "name": "Posterior quadrangular lobule.l",
+    "x": 0.38,
+    "y": 0.25,
+    "z": -0.67
+  },
+  {
+    "name": "Peduncle of flocculus.l",
+    "x": 0.33,
+    "y": -0.12,
+    "z": -0.39
+  },
+  {
+    "name": "Nodule of vermis",
+    "x": 0,
+    "y": -0.14,
+    "z": -0.56
+  },
+  {
+    "name": "Lingula of cerebellum",
+    "x": 0.01,
+    "y": 0.12,
+    "z": -0.41
+  },
+  {
+    "name": "Inferior semilunar lobule.l",
+    "x": 0.47,
+    "y": -0.02,
+    "z": -0.87
+  },
+  {
+    "name": "Gracile lobule.l",
+    "x": 0.43,
+    "y": -0.23,
+    "z": -0.7
+  },
+  {
+    "name": "Folium of vermis",
+    "x": 0,
+    "y": -0.02,
+    "z": -1.01
+  },
+  {
+    "name": "Flocculus.l",
+    "x": 0.44,
+    "y": -0.17,
+    "z": -0.27
+  },
+  {
+    "name": "Declive",
+    "x": 0,
+    "y": 0.24,
+    "z": -0.93
+  },
+  {
+    "name": "Culmen",
+    "x": 0,
+    "y": 0.38,
+    "z": -0.65
+  },
+  {
+    "name": "Central lobule",
+    "x": 0.01,
+    "y": 0.23,
+    "z": -0.42
+  },
+  {
+    "name": "Biventral lobule.l",
+    "x": 0.38,
+    "y": -0.24,
+    "z": -0.57
+  },
+  {
+    "name": "Anterior quadrangular lobule.l",
+    "x": 0.27,
+    "y": 0.36,
+    "z": -0.47
+  },
+  {
+    "name": "Temporal pole.r",
+    "x": -0.72,
+    "y": 0.32,
+    "z": 0.42
+  },
+  {
+    "name": "Occipital pole.r",
+    "x": -0.32,
+    "y": 0.59,
+    "z": -1.54
+  },
+  {
+    "name": "Central sulcus.r",
+    "x": -0.65,
+    "y": 1.85,
+    "z": -0.21
+  },
+  {
+    "name": "Parieto-occipital sulcus.r",
+    "x": -0.31,
+    "y": 1.53,
+    "z": -1.14
+  },
+  {
+    "name": "Subparietal sulcus.r",
+    "x": -0.11,
+    "y": 1.53,
+    "z": -0.89
+  },
+  {
+    "name": "Cingulate sulcus (Marginal part*).r",
+    "x": -0.19,
+    "y": 1.71,
+    "z": -0.63
+  },
+  {
+    "name": "Circular sulcus of insula.r",
+    "x": -0.77,
+    "y": 1.01,
+    "z": 0.32
+  },
+  {
+    "name": "Collateral sulcus.r",
+    "x": -0.46,
+    "y": 0.45,
+    "z": -0.63
+  },
+  {
+    "name": "Anterior occipital sulcus*.r",
+    "x": -0.83,
+    "y": 0.73,
+    "z": -1.16
+  },
+  {
+    "name": "Opercular part of inferior frontal gyrus.r",
+    "x": -0.91,
+    "y": 1.36,
+    "z": 0.53
+  },
+  {
+    "name": "Orbital part of  inferior frontal gyrus.r",
+    "x": -0.87,
+    "y": 0.79,
+    "z": 0.83
+  },
+  {
+    "name": "Triangular part of inferior frontal gyrus.r",
+    "x": -0.93,
+    "y": 1.31,
+    "z": 0.81
+  },
+  {
+    "name": "Orbital gyri (Frontomarginal gyrus and sulcus*).r",
+    "x": -0.5,
+    "y": 0.97,
+    "z": 1.43
+  },
+  {
+    "name": "Paracentral gyrus and sulcus*.r",
+    "x": -0.23,
+    "y": 2.06,
+    "z": -0.55
+  },
+  {
+    "name": "Transverse frontopolar gyrus and sulcus*.r",
+    "x": -0.26,
+    "y": 1.07,
+    "z": 1.53
+  },
+  {
+    "name": "Straight gyrus (Gyrus rectus).r",
+    "x": -0.12,
+    "y": 0.79,
+    "z": 1.06
+  },
+  {
+    "name": "Lat_Fis-ant-Vertical.r",
+    "x": -0.88,
+    "y": 1.1,
+    "z": 0.63
+  },
+  {
+    "name": "Inferior frontal sulcus.r",
+    "x": -0.8,
+    "y": 1.46,
+    "z": 0.76
+  },
+  {
+    "name": "Middle frontal gyrus.r",
+    "x": -0.63,
+    "y": 1.88,
+    "z": 0.76
+  },
+  {
+    "name": "Orbital gyri.r",
+    "x": -0.55,
+    "y": 0.76,
+    "z": 1.02
+  },
+  {
+    "name": "Precentral gyrus.r",
+    "x": -0.69,
+    "y": 2.03,
+    "z": 0
+  },
+  {
+    "name": "Superior frontal gyrus.r",
+    "x": -0.27,
+    "y": 2.05,
+    "z": 0.58
+  },
+  {
+    "name": "Superior frontal sulcus.r",
+    "x": -0.41,
+    "y": 1.96,
+    "z": 0.53
+  },
+  {
+    "name": "Paracentral sulcus.r",
+    "x": -0.51,
+    "y": 1.56,
+    "z": 1.15
+  },
+  {
+    "name": "Orbital sulci (H-shaped orbital sulci*).r",
+    "x": -0.58,
+    "y": 0.69,
+    "z": 1.08
+  },
+  {
+    "name": "Orbital sulci (Lateral Orbital sulcus*).r",
+    "x": -0.93,
+    "y": 0.94,
+    "z": 1.1
+  },
+  {
+    "name": "Olfactory sulcus.r",
+    "x": -0.3,
+    "y": 0.55,
+    "z": 0.85
+  },
+  {
+    "name": "Precentral sulcus (inferior part)*.r",
+    "x": -0.83,
+    "y": 1.72,
+    "z": 0.34
+  },
+  {
+    "name": "Precentral sulcus (Superior part)*.r",
+    "x": -0.6,
+    "y": 1.88,
+    "z": -0.06
+  },
+  {
+    "name": "Angular gyrus.r",
+    "x": -0.72,
+    "y": 1.61,
+    "z": -1.18
+  },
+  {
+    "name": "Supramarginal gyrus.r",
+    "x": -1.03,
+    "y": 1.63,
+    "z": -0.57
+  },
+  {
+    "name": "Postcentral gyrus.r",
+    "x": -0.76,
+    "y": 1.99,
+    "z": -0.26
+  },
+  {
+    "name": "Postcentral sulcus.r",
+    "x": -0.79,
+    "y": 1.87,
+    "z": -0.49
+  },
+  {
+    "name": "Precuneus.r",
+    "x": -0.15,
+    "y": 1.9,
+    "z": -1.06
+  },
+  {
+    "name": "Superior parietal lobule.r",
+    "x": -0.4,
+    "y": 1.9,
+    "z": -1.15
+  },
+  {
+    "name": "Intraparietal sulcus.r",
+    "x": -0.56,
+    "y": 1.54,
+    "z": -1
+  },
+  {
+    "name": "Inferior occipital gyrus and sulcus*.r",
+    "x": -0.68,
+    "y": 0.38,
+    "z": -1.25
+  },
+  {
+    "name": "Lingual gyrus.r",
+    "x": -0.3,
+    "y": 0.62,
+    "z": -1.17
+  },
+  {
+    "name": "Lateral occipital gyrus (Middle occipital gyrus*).r",
+    "x": -0.68,
+    "y": 0.98,
+    "z": -1.42
+  },
+  {
+    "name": "Calcarine sulcus.r",
+    "x": -0.22,
+    "y": 0.73,
+    "z": -1.17
+  },
+  {
+    "name": "Cuneus.r",
+    "x": -0.19,
+    "y": 1.02,
+    "z": -1.33
+  },
+  {
+    "name": "Superior occipital gyri.r",
+    "x": -0.32,
+    "y": 1.26,
+    "z": -1.58
+  },
+  {
+    "name": "Lunate sulcus.r",
+    "x": -0.64,
+    "y": 0.68,
+    "z": -1.5
+  },
+  {
+    "name": "Transverse occipital sulcus.r",
+    "x": -0.45,
+    "y": 0.94,
+    "z": -1.37
+  },
+  {
+    "name": "Transverse temporal gyri.r",
+    "x": -0.9,
+    "y": 0.9,
+    "z": -0.11
+  },
+  {
+    "name": "Temporal plane.r",
+    "x": -1.1,
+    "y": 1.2,
+    "z": -0.52
+  },
+  {
+    "name": "Superior temporal gyrus (Lateral part).r",
+    "x": -1.09,
+    "y": 0.97,
+    "z": -0.02
+  },
+  {
+    "name": "Lateral occipitotemporal gyrus.r",
+    "x": -0.71,
+    "y": 0.34,
+    "z": -0.57
+  },
+  {
+    "name": "Medial occipitotemporal gyrus (Parahippocampal*).r",
+    "x": -0.53,
+    "y": 0.54,
+    "z": -0.09
+  },
+  {
+    "name": "Inferior temporal sulcus.r",
+    "x": -0.83,
+    "y": 0.2,
+    "z": -0.11
+  },
+  {
+    "name": "Inferior temporal gyrus.r",
+    "x": -0.99,
+    "y": 0.63,
+    "z": -0.4
+  },
+  {
+    "name": "Middle temporal gyrus.r",
+    "x": -1.03,
+    "y": 0.85,
+    "z": -0.34
+  },
+  {
+    "name": "Superior temporal sulcus.r",
+    "x": -0.94,
+    "y": 1.16,
+    "z": -0.54
+  },
+  {
+    "name": "Occipitotemporal sulcus (Lateral part*).r",
+    "x": -0.87,
+    "y": 0.37,
+    "z": -0.74
+  },
+  {
+    "name": "Insula (Subcentral gyrus and ant. and post. sulci*).r",
+    "x": -1.05,
+    "y": 1.06,
+    "z": 0.09
+  },
+  {
+    "name": "Cingulate gyrus and sulcus (Middle anterior part).r",
+    "x": -0.11,
+    "y": 1.59,
+    "z": 0.44
+  },
+  {
+    "name": "Cingulate gyrus and sulcus (Middle posterior part).r",
+    "x": -0.15,
+    "y": 1.44,
+    "z": -0.12
+  },
+  {
+    "name": "Cingulate gyrus and sulcus (Posterior dorsal part).r",
+    "x": -0.1,
+    "y": 1.47,
+    "z": -0.59
+  },
+  {
+    "name": "Cingulate gyrus (Posteroventral part*).r",
+    "x": -0.15,
+    "y": 0.86,
+    "z": -0.67
+  },
+  {
+    "name": "White matter of telencephalon.r",
+    "x": -0.64,
+    "y": 1.99,
+    "z": -0.08
+  },
+  {
+    "name": "Lat_Fis-ant-Horizont.r",
+    "x": -0.83,
+    "y": 0.82,
+    "z": 0.78
+  },
+  {
+    "name": "Lat_Fis-post.r",
+    "x": -0.86,
+    "y": 1.09,
+    "z": -0.38
+  },
+  {
+    "name": " Posterior transverse collateral sulcus.r",
+    "x": -0.45,
+    "y": 0.23,
+    "z": -1.2
+  },
+  {
+    "name": "Sulcus interm_prim-Jensen.r",
+    "x": -0.92,
+    "y": 1.41,
+    "z": -0.91
+  },
+  {
+    "name": "Wing of central lobule.r",
+    "x": -0.19,
+    "y": 0.24,
+    "z": -0.27
+  },
+  {
+    "name": "Tonsil of cerebellum.r",
+    "x": -0.24,
+    "y": -0.25,
+    "z": -0.52
+  },
+  {
+    "name": "Superior semilunar lobule.r",
+    "x": -0.48,
+    "y": 0.07,
+    "z": -0.88
+  },
+  {
+    "name": "Superior cerebellar peduncle.r",
+    "x": -0.18,
+    "y": 0.17,
+    "z": -0.39
+  },
+  {
+    "name": "Posterior quadrangular lobule.r",
+    "x": -0.38,
+    "y": 0.25,
+    "z": -0.67
+  },
+  {
+    "name": "Peduncle of flocculus.r",
+    "x": -0.33,
+    "y": -0.12,
+    "z": -0.39
+  },
+  {
+    "name": "Inferior semilunar lobule.r",
+    "x": -0.47,
+    "y": -0.02,
+    "z": -0.87
+  },
+  {
+    "name": "Gracile lobule.r",
+    "x": -0.43,
+    "y": -0.23,
+    "z": -0.7
+  },
+  {
+    "name": "Flocculus.r",
+    "x": -0.44,
+    "y": -0.17,
+    "z": -0.27
+  },
+  {
+    "name": "Biventral lobule.r",
+    "x": -0.38,
+    "y": -0.24,
+    "z": -0.57
+  },
+  {
+    "name": "Anterior quadrangular lobule.r",
+    "x": -0.27,
+    "y": 0.36,
+    "z": -0.47
+  },
+  {
+    "name": "Tentorium cerebelli.l",
+    "x": 0.58,
+    "y": 0.41,
+    "z": -0.68
+  },
+  {
+    "name": "Globus pallidus external.l",
+    "x": 0.4,
+    "y": 0.69,
+    "z": 0.21
+  },
+  {
+    "name": "Globus pallidus external.r",
+    "x": -0.4,
+    "y": 0.68,
+    "z": 0.21
+  },
+  {
+    "name": "Globus pallidus internal.l",
+    "x": 0.37,
+    "y": 0.59,
+    "z": 0.19
+  },
+  {
+    "name": "Globus pallidus internal.r",
+    "x": -0.36,
+    "y": 0.6,
+    "z": 0.19
+  },
+  {
+    "name": "Subthalamic nucleus.l",
+    "x": 0.24,
+    "y": 0.51,
+    "z": 0.12
+  },
+  {
+    "name": "Subthalamic nucleus.r",
+    "x": -0.23,
+    "y": 0.5,
+    "z": 0.13
+  },
+  {
+    "name": "Substantia nigra.l",
+    "x": 0.2,
+    "y": 0.44,
+    "z": 0.11
+  },
+  {
+    "name": "Substantia nigra.r",
+    "x": -0.2,
+    "y": 0.44,
+    "z": 0.11
+  },
+  {
+    "name": "Nucleus accumbens.l",
+    "x": 0.23,
+    "y": 0.57,
+    "z": 0.42
+  },
+  {
+    "name": "Nucleus accumbens.r",
+    "x": -0.21,
+    "y": 0.58,
+    "z": 0.43
+  },
+  {
+    "name": "Pulvinar.l",
+    "x": 0.41,
+    "y": 0.66,
+    "z": -0.19
+  },
+  {
+    "name": "Pulvinar.r",
+    "x": -0.37,
+    "y": 0.66,
+    "z": -0.21
+  },
+  {
+    "name": "Anterior nuclei of thalamus.l",
+    "x": 0.18,
+    "y": 0.74,
+    "z": 0.12
+  },
+  {
+    "name": "Anterior nuclei of thalamus.r",
+    "x": -0.18,
+    "y": 0.76,
+    "z": 0.12
+  },
+  {
+    "name": "Mediodorsal nucleus.l",
+    "x": 0.16,
+    "y": 0.72,
+    "z": -0.04
+  },
+  {
+    "name": "Mediodorsal nucleus.r",
+    "x": -0.14,
+    "y": 0.7,
+    "z": -0.01
+  },
+  {
+    "name": "Ventral laterodorsal nucleus.l",
+    "x": 0.32,
+    "y": 0.79,
+    "z": -0.16
+  },
+  {
+    "name": "Ventral laterodorsal nucleus.r",
+    "x": -0.32,
+    "y": 0.78,
+    "z": -0.2
+  },
+  {
+    "name": "Intralaminar and lateral posterior nuclei.l",
+    "x": 0.24,
+    "y": 0.68,
+    "z": -0.18
+  },
+  {
+    "name": "Intralaminar and lateral posterior nuclei.r",
+    "x": -0.21,
+    "y": 0.68,
+    "z": -0.15
+  },
+  {
+    "name": "Ventral anterior nucleus.l",
+    "x": 0.23,
+    "y": 0.8,
+    "z": -0.01
+  },
+  {
+    "name": "Ventral anterior nucleus.r",
+    "x": -0.24,
+    "y": 0.8,
+    "z": -0.05
+  },
+  {
+    "name": "Ventral lateroventral nucleus.l",
+    "x": 0.36,
+    "y": 0.67,
+    "z": -0.04
+  },
+  {
+    "name": "Ventral lateroventral nucleus.r",
+    "x": -0.37,
+    "y": 0.68,
+    "z": -0.05
+  },
+  {
+    "name": "Lateral nucleus.l",
+    "x": 0.59,
+    "y": 0.37,
+    "z": 0.38
+  },
+  {
+    "name": "Lateral nucleus.r",
+    "x": -0.59,
+    "y": 0.37,
+    "z": 0.38
+  },
+  {
+    "name": "Basolateral complex.l",
+    "x": 0.46,
+    "y": 0.42,
+    "z": 0.33
+  },
+  {
+    "name": "Basolateral complex.r",
+    "x": -0.48,
+    "y": 0.42,
+    "z": 0.32
+  },
+  {
+    "name": "Central nucleus.l",
+    "x": 0.51,
+    "y": 0.46,
+    "z": 0.21
+  },
+  {
+    "name": "Central nucleus.r",
+    "x": -0.53,
+    "y": 0.46,
+    "z": 0.21
+  },
+  {
+    "name": "Corticomedial group.l",
+    "x": 0.45,
+    "y": 0.46,
+    "z": 0.28
+  },
+  {
+    "name": "Corticomedial group.r",
+    "x": -0.47,
+    "y": 0.46,
+    "z": 0.28
+  },
+  {
+    "name": "Preoptic hypothalamus.l",
+    "x": 0.08,
+    "y": 0.54,
+    "z": 0.32
+  },
+  {
+    "name": "Preoptic hypothalamus.r",
+    "x": -0.05,
+    "y": 0.53,
+    "z": 0.32
+  },
+  {
+    "name": "Anterior hypothalamus.l",
+    "x": 0.11,
+    "y": 0.57,
+    "z": 0.32
+  },
+  {
+    "name": "Anterior hypothalamus.r",
+    "x": -0.12,
+    "y": 0.56,
+    "z": 0.31
+  },
+  {
+    "name": "Tuberal hypothalamus.l",
+    "x": 0.1,
+    "y": 0.47,
+    "z": 0.31
+  },
+  {
+    "name": "Tuberal hypothalamus.r",
+    "x": -0.09,
+    "y": 0.47,
+    "z": 0.31
+  },
+  {
+    "name": "Lateral hypothalamus.l",
+    "x": 0.19,
+    "y": 0.58,
+    "z": 0.26
+  },
+  {
+    "name": "Lateral hypothalamus.r",
+    "x": -0.19,
+    "y": 0.59,
+    "z": 0.26
+  },
+  {
+    "name": "Posterior hypothalamus.l",
+    "x": 0.06,
+    "y": 0.51,
+    "z": 0.19
+  },
+  {
+    "name": "Posterior hypothalamus.r",
+    "x": -0.05,
+    "y": 0.5,
+    "z": 0.19
+  },
+  {
+    "name": "Adenohypophysis",
+    "x": 0,
+    "y": 0.27,
+    "z": 0.44
+  },
+  {
+    "name": "Neurohypophysis",
+    "x": 0,
+    "y": 0.26,
+    "z": 0.4
+  },
+  {
+    "name": "Pineal gland",
+    "x": 0,
+    "y": 0.5,
+    "z": -0.34
+  },
+  {
+    "name": "Abducens nerve (VI).l",
+    "x": 0.33,
+    "y": 0.13,
+    "z": 0.4
+  },
+  {
+    "name": "Abducens nerve (VI).r",
+    "x": -0.33,
+    "y": 0.13,
+    "z": 0.4
+  },
+  {
+    "name": "Acoustic radiation.l",
+    "x": 0.41,
+    "y": 0.89,
+    "z": -0.36
+  },
+  {
+    "name": "Acoustic radiation.r",
+    "x": -0.47,
+    "y": 0.83,
+    "z": -0.44
+  },
+  {
+    "name": "Anterior division of mandibular nerve.l",
+    "x": 0.51,
+    "y": -0.32,
+    "z": 0.47
+  },
+  {
+    "name": "Anterior division of mandibular nerve.r",
+    "x": -0.51,
+    "y": -0.32,
+    "z": 0.47
+  },
+  {
+    "name": "Anterior thalamic radiation.l",
+    "x": 0.22,
+    "y": 1.43,
+    "z": 0.72
+  },
+  {
+    "name": "Anterior thalamic radiation.r",
+    "x": -0.29,
+    "y": 1.28,
+    "z": 0.51
+  },
+  {
+    "name": "Arcuate fasciculus.l",
+    "x": 1,
+    "y": 1.26,
+    "z": -0.16
+  },
+  {
+    "name": "Arcuate fasciculus.r",
+    "x": -0.91,
+    "y": 1.02,
+    "z": -0.13
+  },
+  {
+    "name": "Buccal nerve.l",
+    "x": 0.62,
+    "y": -0.57,
+    "z": 0.93
+  },
+  {
+    "name": "Buccal nerve.r",
+    "x": -0.62,
+    "y": -0.57,
+    "z": 0.93
+  },
+  {
+    "name": "Corticobulbar tract.l",
+    "x": 0.61,
+    "y": 0.9,
+    "z": 0.15
+  },
+  {
+    "name": "Corticobulbar tract.r",
+    "x": -0.59,
+    "y": 0.93,
+    "z": 0.1
+  },
+  {
+    "name": "Corticopontine tract (frontal).l",
+    "x": 0.28,
+    "y": 1.26,
+    "z": 0.47
+  },
+  {
+    "name": "Corticopontine tract (frontal).r",
+    "x": -0.25,
+    "y": 1.19,
+    "z": 0.49
+  },
+  {
+    "name": "Corticopontine tract (occipital).l",
+    "x": 0.39,
+    "y": 0.61,
+    "z": -0.46
+  },
+  {
+    "name": "Corticopontine tract (occipital).r",
+    "x": -0.47,
+    "y": 0.62,
+    "z": -0.48
+  },
+  {
+    "name": "Corticopontine tract (parietal).l",
+    "x": 0.32,
+    "y": 1.3,
+    "z": -0.57
+  },
+  {
+    "name": "Corticopontine tract (parietal).r",
+    "x": -0.24,
+    "y": 1.59,
+    "z": -0.34
+  },
+  {
+    "name": "Corticospinal tract.l",
+    "x": 0.33,
+    "y": 1.58,
+    "z": -0.13
+  },
+  {
+    "name": "Corticospinal tract.r",
+    "x": -0.36,
+    "y": 1.58,
+    "z": -0.11
+  },
+  {
+    "name": "Corticostriatal tract (anterior).l",
+    "x": 0.34,
+    "y": 1.41,
+    "z": 0.65
+  },
+  {
+    "name": "Corticostriatal tract (anterior).r",
+    "x": -0.35,
+    "y": 1.45,
+    "z": 0.66
+  },
+  {
+    "name": "Corticostriatal tract (posterior).l",
+    "x": 0.54,
+    "y": 0.83,
+    "z": -0.65
+  },
+  {
+    "name": "Corticostriatal tract (posterior).r",
+    "x": -0.51,
+    "y": 1.23,
+    "z": -0.81
+  },
+  {
+    "name": "Corticostriatal tract (superior).l",
+    "x": 0.33,
+    "y": 1.48,
+    "z": -0.33
+  },
+  {
+    "name": "Corticostriatal tract (superior).r",
+    "x": -0.51,
+    "y": 1.13,
+    "z": -0.26
+  },
+  {
+    "name": "Dentatorubrothalamic tract.l",
+    "x": 0.2,
+    "y": 1.58,
+    "z": -0.11
+  },
+  {
+    "name": "Dentatorubrothalamic tract.r",
+    "x": -0.06,
+    "y": 1.55,
+    "z": -0.45
+  },
+  {
+    "name": "Facial nerve (VII).l",
+    "x": 0.64,
+    "y": 0.6,
+    "z": 0.78
+  },
+  {
+    "name": "Facial nerve (VII).r",
+    "x": -0.64,
+    "y": 0.6,
+    "z": 0.78
+  },
+  {
+    "name": "Frontal aslant tract.l",
+    "x": 0.79,
+    "y": 1.56,
+    "z": -0.25
+  },
+  {
+    "name": "Frontal aslant tract.r",
+    "x": -0.81,
+    "y": 1.52,
+    "z": 0.11
+  },
+  {
+    "name": "Hypoglossal nerve (XII).l",
+    "x": 0.29,
+    "y": -0.38,
+    "z": 0.43
+  },
+  {
+    "name": "Hypoglossal nerve (XII).r",
+    "x": -0.29,
+    "y": -0.38,
+    "z": 0.43
+  },
+  {
+    "name": "Inferior cerebellar peduncle.l",
+    "x": 0.17,
+    "y": 0.32,
+    "z": -0.52
+  },
+  {
+    "name": "Inferior cerebellar peduncle.r",
+    "x": -0.28,
+    "y": 0.04,
+    "z": -0.27
+  },
+  {
+    "name": "Inferior fronto-occipital fasciculus.l",
+    "x": 0.55,
+    "y": 0.95,
+    "z": -0.13
+  },
+  {
+    "name": "Inferior fronto-occipital fasciculus.r",
+    "x": -0.5,
+    "y": 1.11,
+    "z": -0.2
+  },
+  {
+    "name": "Inferior longitudinal fasciculus.l",
+    "x": 0.89,
+    "y": 0.54,
+    "z": 0.06
+  },
+  {
+    "name": "Inferior longitudinal fasciculus.r",
+    "x": -0.69,
+    "y": 1.02,
+    "z": -0.36
+  },
+  {
+    "name": "Lingual nerve.l",
+    "x": 0.38,
+    "y": -0.45,
+    "z": 0.86
+  },
+  {
+    "name": "Lingual nerve.r",
+    "x": -0.38,
+    "y": -0.45,
+    "z": 0.86
+  },
+  {
+    "name": "Maxillary nerve.l",
+    "x": 0.43,
+    "y": 0.13,
+    "z": 0.89
+  },
+  {
+    "name": "Maxillary nerve.r",
+    "x": -0.43,
+    "y": 0.13,
+    "z": 0.89
+  },
+  {
+    "name": "Medial lemniscus.l",
+    "x": 0.29,
+    "y": 1.55,
+    "z": -0.33
+  },
+  {
+    "name": "Medial lemniscus.r",
+    "x": -0.32,
+    "y": 1.55,
+    "z": -0.38
+  },
+  {
+    "name": "Meningeal branch of maxillary nerve.l",
+    "x": 0.96,
+    "y": 1.37,
+    "z": 0.14
+  },
+  {
+    "name": "Meningeal branch of maxillary nerve.r",
+    "x": -0.96,
+    "y": 1.37,
+    "z": 0.14
+  },
+  {
+    "name": "Middle cerebellar peduncle",
+    "x": 0.06,
+    "y": 0.02,
+    "z": -0.3
+  },
+  {
+    "name": "Middle longitudinal fasciculus.l",
+    "x": 0.7,
+    "y": 1.28,
+    "z": -0.38
+  },
+  {
+    "name": "Middle longitudinal fasciculus.r",
+    "x": -0.89,
+    "y": 1.32,
+    "z": -0.4
+  },
+  {
+    "name": "Oculomotor nerve (III).l",
+    "x": 0.38,
+    "y": 0.29,
+    "z": 0.71
+  },
+  {
+    "name": "Oculomotor nerve (III).r",
+    "x": -0.38,
+    "y": 0.29,
+    "z": 0.71
+  },
+  {
+    "name": "Olfactory nerve (I).l",
+    "x": 0.23,
+    "y": 0.4,
+    "z": 0.95
+  },
+  {
+    "name": "Olfactory nerve (I).r",
+    "x": -0.23,
+    "y": 0.4,
+    "z": 0.95
+  },
+  {
+    "name": "Ophthalmic nerve.l",
+    "x": 0.47,
+    "y": 0.76,
+    "z": 0.98
+  },
+  {
+    "name": "Ophthalmic nerve.r",
+    "x": -0.47,
+    "y": 0.76,
+    "z": 0.98
+  },
+  {
+    "name": "Optic nerve (II).l",
+    "x": 0.3,
+    "y": 0.31,
+    "z": 0.88
+  },
+  {
+    "name": "Optic nerve (II).r",
+    "x": -0.3,
+    "y": 0.31,
+    "z": 0.88
+  },
+  {
+    "name": "Optic radiation.l",
+    "x": 0.43,
+    "y": 0.54,
+    "z": -0.68
+  },
+  {
+    "name": "Optic radiation.r",
+    "x": -0.44,
+    "y": 0.69,
+    "z": -0.67
+  },
+  {
+    "name": "Posterior division of mandibular nerve.l",
+    "x": 0.57,
+    "y": -0.32,
+    "z": 0.44
+  },
+  {
+    "name": "Posterior division of mandibular nerve.r",
+    "x": -0.57,
+    "y": -0.32,
+    "z": 0.44
+  },
+  {
+    "name": "Posterior thalamic radiation.l",
+    "x": 0.5,
+    "y": 1.26,
+    "z": -0.84
+  },
+  {
+    "name": "Posterior thalamic radiation.r",
+    "x": -0.58,
+    "y": 1.27,
+    "z": -0.78
+  },
+  {
+    "name": "Reticulospinal tract.l",
+    "x": 0.3,
+    "y": 1.39,
+    "z": 0.34
+  },
+  {
+    "name": "Reticulospinal tract.r",
+    "x": -0.42,
+    "y": 0.87,
+    "z": 0.51
+  },
+  {
+    "name": "Superior cerebellar peduncle",
+    "x": 0.03,
+    "y": 0.33,
+    "z": -0.17
+  },
+  {
+    "name": "Superior longitudinal fasciculus I.l",
+    "x": 0.17,
+    "y": 1.48,
+    "z": -0.4
+  },
+  {
+    "name": "Superior longitudinal fasciculus I.r",
+    "x": -0.17,
+    "y": 1.57,
+    "z": -0.21
+  },
+  {
+    "name": "Superior longitudinal fasciculus II.l",
+    "x": 0.8,
+    "y": 1.14,
+    "z": -0.1
+  },
+  {
+    "name": "Superior longitudinal fasciculus II.r",
+    "x": -0.61,
+    "y": 1.27,
+    "z": -0.05
+  },
+  {
+    "name": "Superior longitudinal fasciculus III.l",
+    "x": 1.12,
+    "y": 1.04,
+    "z": -0.38
+  },
+  {
+    "name": "Superior longitudinal fasciculus III.r",
+    "x": -0.79,
+    "y": 1.29,
+    "z": -0.36
+  },
+  {
+    "name": "Superior thalamic radiation.l",
+    "x": 0.48,
+    "y": 1.44,
+    "z": -0.33
+  },
+  {
+    "name": "Superior thalamic radiation.r",
+    "x": -0.36,
+    "y": 1.47,
+    "z": -0.36
+  },
+  {
+    "name": "Trigeminal nerve (V).l",
+    "x": 0.27,
+    "y": 0.13,
+    "z": 0.09
+  },
+  {
+    "name": "Trigeminal nerve (V).r",
+    "x": -0.27,
+    "y": 0.13,
+    "z": 0.09
+  },
+  {
+    "name": "Trochlear nerve (IV).l",
+    "x": 0.28,
+    "y": 0.26,
+    "z": 0.51
+  },
+  {
+    "name": "Trochlear nerve (IV).r",
+    "x": -0.28,
+    "y": 0.26,
+    "z": 0.51
+  },
+  {
+    "name": "Uncinate fasciculus.l",
+    "x": 0.62,
+    "y": 0.67,
+    "z": 0.69
+  },
+  {
+    "name": "Uncinate fasciculus.r",
+    "x": -0.63,
+    "y": 0.78,
+    "z": 0.7
+  },
+  {
+    "name": "Vestibular nerve.l",
+    "x": 0.58,
+    "y": -0.2,
+    "z": 0.03
+  },
+  {
+    "name": "Vestibular nerve.r",
+    "x": -0.58,
+    "y": -0.2,
+    "z": 0.03
+  }
+]
