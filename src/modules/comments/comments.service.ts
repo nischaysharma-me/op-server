@@ -5,7 +5,10 @@ import { Comment, CommentDocument } from './schemas/comment.schema';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 import { Opinion, OpinionDocument } from '../opinions/schemas/opinion.schema';
+import { Issue, IssueDocument, IssueStatus } from '../issues/schemas/issue.schema';
 import { VectorService } from '../vector/vector.service';
+
+const RESOLUTION_REGEX = /\b(issue is resolved|resolved|fixed|issue solved|problem solved|worked for me|thank you it worked|solution worked|this resolved it|fixed now)\b/i;
 
 @Injectable()
 export class CommentsService {
@@ -14,6 +17,8 @@ export class CommentsService {
     private readonly commentModel: Model<CommentDocument>,
     @InjectModel(Opinion.name)
     private readonly opinionModel: Model<OpinionDocument>,
+    @InjectModel(Issue.name)
+    private readonly issueModel: Model<IssueDocument>,
     private readonly vectorService: VectorService,
   ) {}
 
@@ -65,6 +70,17 @@ export class CommentsService {
           },
         )
         .catch(() => {});
+
+      // Auto-resolution check: If comment states the trouble is resolved, halt autonomous cycle
+      if (RESOLUTION_REGEX.test(saved.content)) {
+        this.issueModel
+          .findByIdAndUpdate(troubleId, {
+            status: IssueStatus.SOLVED,
+            isAutonomousActive: false,
+          })
+          .exec()
+          .catch(() => {});
+      }
     }
 
     const populated = await this.commentModel

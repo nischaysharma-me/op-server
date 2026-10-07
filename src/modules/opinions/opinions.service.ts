@@ -6,6 +6,8 @@ import { Issue, IssueDocument, IssueStatus } from '../issues/schemas/issue.schem
 import { CreateOpinionDto } from './dto/create-opinion.dto';
 import { VectorService } from '../vector/vector.service';
 
+const RESOLUTION_REGEX = /\b(issue is resolved|resolved|fixed|issue solved|problem solved|worked for me|thank you it worked|solution worked|this resolved it|fixed now)\b/i;
+
 @Injectable()
 export class OpinionsService {
   constructor(
@@ -42,11 +44,19 @@ export class OpinionsService {
       authorId: new Types.ObjectId(createDto.authorId),
     });
     const saved = await opinion.save();
-    // Update issue status to IN_DISCUSSION if OPEN
-    await this.issueModel.updateOne(
-      { _id: createDto.issueId, status: IssueStatus.OPEN },
-      { status: IssueStatus.IN_DISCUSSION },
-    );
+
+    if (RESOLUTION_REGEX.test(saved.content)) {
+      await this.issueModel.updateOne(
+        { _id: createDto.issueId },
+        { status: IssueStatus.SOLVED, isAutonomousActive: false },
+      );
+    } else {
+      // Update issue status to IN_DISCUSSION if OPEN
+      await this.issueModel.updateOne(
+        { _id: createDto.issueId, status: IssueStatus.OPEN },
+        { status: IssueStatus.IN_DISCUSSION },
+      );
+    }
 
     // Index opinion into trouble-specific vector DB
     const opinionText = `${saved.title || 'Community Perspective'}: ${saved.content}${
@@ -83,12 +93,13 @@ export class OpinionsService {
     opinion.isAccepted = true;
     await opinion.save();
 
-    // Mark issue as SOLVED
+    // Mark issue as SOLVED and halt autonomous cycle
     await this.issueModel.updateOne(
       { _id: opinion.issueId },
       {
         acceptedOpinionId: opinion._id,
         status: IssueStatus.SOLVED,
+        isAutonomousActive: false,
       },
     );
 

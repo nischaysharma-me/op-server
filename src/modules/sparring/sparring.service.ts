@@ -108,7 +108,7 @@ export class SparringService {
   /**
    * Adaptive Domain Detection: Identifies whether an issue is Technical (code/bug) or General (opinion/real-world)
    */
-  private detectDomain(issue: { title: string; content: string; codeSnippet?: string; tags?: string[] }): 'TECHNICAL' | 'GENERAL' {
+  public detectDomain(issue: { title: string; content: string; codeSnippet?: string; tags?: string[] }): 'TECHNICAL' | 'GENERAL' {
     if (issue.codeSnippet && issue.codeSnippet.trim().length > 0) {
       return 'TECHNICAL';
     }
@@ -143,7 +143,11 @@ export class SparringService {
    */
   async getLastActiveAgentCode(issueId: string): Promise<string | null> {
     try {
-      const opinions = await this.opinionModel.find({ issueId }).select('_id').exec();
+      const oid = Types.ObjectId.isValid(issueId) ? new Types.ObjectId(issueId) : issueId;
+      const opinions = await this.opinionModel
+        .find({ $or: [{ issueId: oid }, { issueId: issueId.toString() }] })
+        .select('_id')
+        .exec();
       const opIds = opinions.map((o) => o._id);
 
       const lastComment = await this.commentModel
@@ -161,7 +165,7 @@ export class SparringService {
 
       const lastOpinion = await this.opinionModel
         .findOne({
-          issueId,
+          $or: [{ issueId: oid }, { issueId: issueId.toString() }],
           authorType: 'AI_AGENT',
           agentCode: { $exists: true, $ne: null },
         })
@@ -469,7 +473,7 @@ export class SparringService {
   /**
    * Helper: Calls LangChain ChatOpenAI (with streaming if onToken provided) or falls back to persona intelligent response
    */
-  private async generateAgentText(
+  public async generateAgentText(
     modelId: string,
     systemPrompt: string,
     userPrompt: string,
@@ -937,7 +941,7 @@ As ${item.agent.displayName || 'Alice'} (a perceptive, thoughtful community memb
     });
   }
 
-  private parseOpinionResponse(text: string, defaultTitle: string = 'Community Insight') {
+  public parseOpinionResponse(text: string, defaultTitle: string = 'Community Insight') {
     let title = '';
     let content = text.trim();
     let code = '';

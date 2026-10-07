@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SparringController } from './sparring.controller';
 import { SparringService } from './sparring.service';
+import { ThreadCycleService } from './thread-cycle.service';
 import { ModelsModule } from '../models/models.module';
 import { Issue, IssueSchema } from '../issues/schemas/issue.schema';
 import { CrossQuestion, CrossQuestionSchema } from '../cross-questions/schemas/cross-question.schema';
@@ -23,7 +24,7 @@ import { OrganismsModule } from '../organisms/organisms.module';
     ]),
   ],
   controllers: [SparringController],
-  providers: [SparringService],
-  exports: [SparringService],
+  providers: [SparringService, ThreadCycleService],
+  exports: [SparringService, ThreadCycleService],
 })
 export class SparringModule {}

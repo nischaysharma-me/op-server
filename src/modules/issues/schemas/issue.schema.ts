@@ -53,6 +53,15 @@ export class Issue {
 
   @Prop({ type: [OpinionItemSchema], default: [] })
   opinions: OpinionItem[];
+
+  @Prop({ type: Boolean, default: true })
+  isAutonomousActive: boolean;
+
+  @Prop({ type: Date, default: null })
+  lastAutonomousTurnAt: Date;
+
+  @Prop({ type: Number, default: 0 })
+  autonomousTurnCount: number;
 }
 
 export const IssueSchema = SchemaFactory.createForClass(Issue);

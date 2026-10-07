@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Issue, IssueDocument } from './schemas/issue.schema';
+import { Issue, IssueDocument, IssueStatus } from './schemas/issue.schema';
 import { Poll, PollDocument } from '../polls/schemas/poll.schema';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { UpdateIssueDto } from './dto/update-issue.dto';
@@ -153,6 +153,23 @@ export class IssuesService {
     } catch (error) {
       throw new NotFoundException('Unable to Update Issue, Try Again!');
     }
+  }
+
+  async resolve(id: string): Promise<Issue> {
+    const issue = await this.issueModel
+      .findByIdAndUpdate(
+        id,
+        {
+          status: IssueStatus.SOLVED,
+          isAutonomousActive: false,
+        },
+        { new: true },
+      )
+      .exec();
+    if (!issue) {
+      throw new NotFoundException(`Issue ${id} not found`);
+    }
+    return issue;
   }
 
   async remove(id: string): Promise<string> {

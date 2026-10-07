@@ -57,6 +57,11 @@ export class IssuesController {
     return this.issuesService.updateOpinions(id, updateOpinionDto);
   }
 
+  @Post('resolve/:id')
+  resolve(@Param('id') id: string) {
+    return this.issuesService.resolve(id);
+  }
+
   @Delete('delete/:id')
   remove(@Param('id') id: string) {
     return this.issuesService.remove(id);

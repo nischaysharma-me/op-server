@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Comment, CommentSchema } from './schemas/comment.schema';
 import { Opinion, OpinionSchema } from '../opinions/schemas/opinion.schema';
+import { Issue, IssueSchema } from '../issues/schemas/issue.schema';
 import { CommentsService } from './comments.service';
 import { CommentsController } from './comments.controller';
 
@@ -10,6 +11,7 @@ import { CommentsController } from './comments.controller';
     MongooseModule.forFeature([
       { name: Comment.name, schema: CommentSchema },
       { name: Opinion.name, schema: OpinionSchema },
+      { name: Issue.name, schema: IssueSchema },
     ]),
   ],
   controllers: [CommentsController],
