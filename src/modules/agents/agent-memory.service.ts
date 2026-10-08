@@ -22,6 +22,12 @@ export interface NeuronTopologyNode {
   lobe: string;
   type: string;
   vectorPreview: number[];
+  // Dynamic real-time cognitive & system activity fields
+  isFiringNow?: boolean;
+  activityLevel?: number; // 0.0 to 1.0 based on real operations/thoughts
+  lastFiredTimestamp?: Date | string;
+  firingFrequency?: number; // dynamic Hz multiplier
+  connectedIssueTitle?: string;
 }
 
 export interface NervePathway {
@@ -30,6 +36,17 @@ export interface NervePathway {
   description: string;
   color: string;
   points: Array<{ x: number; y: number; z: number }>;
+}
+
+export interface CognitiveTelemetry {
+  systemActivityLevel: number; // 0.0 to 1.0 aggregate
+  deliberationState: 'THINKING' | 'DEBATING' | 'RESTING' | 'ANALYZING';
+  firingRateMultiplier: number;
+  recentActionCount: number;
+  activeTroublesCount: number;
+  lastActionTimeAgo?: string;
+  isCoolingDown: boolean;
+  cooldownRemainingSeconds: number;
 }
 
 export interface BrainStateResponse {
@@ -85,6 +102,7 @@ export interface BrainStateResponse {
     axonsCount: number;
     nerveTractsCount: number;
   };
+  telemetry: CognitiveTelemetry;
   cognitiveClusters: string[];
   recentThoughts: Array<{
     title: string;
@@ -225,31 +243,20 @@ export class AgentMemoryService implements OnModuleInit {
 
     const cognitiveClusters = clustersMap[agentCode] || ['Analytical Core', 'Decision Matrix', 'Memory Storage'];
 
-    // Generate 3D Neuron Topology Points & Nerve Pathways
-    const topology: NeuronTopologyNode[] = this.generateNeuronTopology(agentCode, memories);
-    const nervePathways: NervePathway[] = this.generateNervePathways(agentCode);
-
-    const recentThoughts = memories.slice(0, 5).map((m) => ({
-      title: m.title,
-      type: m.memoryType,
-      summary: m.summary || m.content.substring(0, 140) + '...',
-      importance: m.importanceScore,
-      timeAgo: this.formatTimeAgo(m.lastRecalledAt || (m as any).createdAt),
-    }));
-
     // Query recent opinions and comments on troubles by this agent
-    const [recentOps, recentComms] = await Promise.all([
+    const [recentOps, recentComms, activeIssuesCount] = await Promise.all([
       this.opinionModel
         .find({ agentCode })
         .sort({ createdAt: -1 })
-        .limit(5)
+        .limit(8)
         .populate('issueId', 'title')
         .exec(),
       this.commentModel
         .find({ agentCode })
         .sort({ createdAt: -1 })
-        .limit(5)
+        .limit(8)
         .exec(),
+      this.issueModel.countDocuments({ status: { $in: ['OPEN', 'IN_DISCUSSION', 'IN_PROGRESS'] } }).exec(),
     ]);
 
     const recentActivities: BrainStateResponse['recentActivities'] = [];
@@ -281,6 +288,65 @@ export class AgentMemoryService implements OnModuleInit {
     }
 
     recentActivities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // Dynamic Cognitive Firing Telemetry derived from real live system activities
+    const now = Date.now();
+    const latestAction = recentActivities.length > 0 ? new Date(recentActivities[0].createdAt).getTime() : 0;
+    const secondsSinceLastAction = latestAction > 0 ? Math.floor((now - latestAction) / 1000) : 99999;
+
+    let systemActivityLevel = 0.35;
+    let deliberationState: CognitiveTelemetry['deliberationState'] = 'RESTING';
+    let firingRateMultiplier = 1.0;
+
+    if (isCoolingDown) {
+      // Resting / recharging state after deliberation cycle
+      deliberationState = 'RESTING';
+      systemActivityLevel = Math.max(0.2, 0.45 - (cooldownRemainingSeconds / (cooldownConfigSeconds || 20)) * 0.25);
+      firingRateMultiplier = 0.65;
+    } else if (secondsSinceLastAction < 90) {
+      // Actively debating or offering solutions on troubles
+      deliberationState = 'DEBATING';
+      systemActivityLevel = 0.95;
+      firingRateMultiplier = 1.85;
+    } else if (secondsSinceLastAction < 300) {
+      // Recently analyzed problem spaces and formed memories
+      deliberationState = 'ANALYZING';
+      systemActivityLevel = 0.75;
+      firingRateMultiplier = 1.35;
+    } else {
+      // Cognitive thinking / latent background synthesis
+      deliberationState = 'THINKING';
+      systemActivityLevel = 0.5;
+      firingRateMultiplier = 1.0;
+    }
+
+    const telemetry: CognitiveTelemetry = {
+      systemActivityLevel: parseFloat(systemActivityLevel.toFixed(2)),
+      deliberationState,
+      firingRateMultiplier: parseFloat(firingRateMultiplier.toFixed(2)),
+      recentActionCount: recentActivities.length,
+      activeTroublesCount: activeIssuesCount || 0,
+      lastActionTimeAgo: recentActivities.length > 0 ? recentActivities[0].timeAgo : undefined,
+      isCoolingDown,
+      cooldownRemainingSeconds,
+    };
+
+    // Generate 3D Neuron Topology Points & Nerve Pathways wired to live system activities
+    const topology: NeuronTopologyNode[] = this.generateNeuronTopology(
+      agentCode,
+      memories,
+      recentActivities,
+      telemetry
+    );
+    const nervePathways: NervePathway[] = this.generateNervePathways(agentCode);
+
+    const recentThoughts = memories.slice(0, 5).map((m) => ({
+      title: m.title,
+      type: m.memoryType,
+      summary: m.summary || m.content.substring(0, 140) + '...',
+      importance: m.importanceScore,
+      timeAgo: this.formatTimeAgo(m.lastRecalledAt || (m as any).createdAt),
+    }));
 
     let totalVectors = memories.filter((m) => m.isIndexedInPinecone).length;
     if (this.isPineconeReady && this.pineconeClient) {
@@ -323,6 +389,7 @@ export class AgentMemoryService implements OnModuleInit {
         axonsCount: Math.round(topology.length * 2.8),
         nerveTractsCount: nervePathways.length,
       },
+      telemetry,
       cognitiveClusters,
       recentThoughts,
       recentActivities,
@@ -566,8 +633,14 @@ export class AgentMemoryService implements OnModuleInit {
 
   /**
    * Generate Anatomical 3D Neuron Topology Points snapped directly to cortical Gyri & Sulci folds
+   * Dynamically modulated by real-time system activities and deliberation telemetry
    */
-  private generateNeuronTopology(agentCode: string, memories: AgentMemoryDocument[]): NeuronTopologyNode[] {
+  private generateNeuronTopology(
+    agentCode: string,
+    memories: AgentMemoryDocument[],
+    recentActivities: BrainStateResponse['recentActivities'] = [],
+    telemetry?: CognitiveTelemetry
+  ): NeuronTopologyNode[] {
     const nodes: NeuronTopologyNode[] = [];
     const memoryCount = memories.length;
 
@@ -619,6 +692,11 @@ export class AgentMemoryService implements OnModuleInit {
       }
       return vec;
     };
+
+    // System-wide dynamic firing rate multiplier
+    const rateMultiplier = telemetry?.firingRateMultiplier || 1.0;
+    const isCooling = telemetry?.isCoolingDown || false;
+    const deliberationState = telemetry?.deliberationState || 'RESTING';
 
     // 1. Plant dedicated neurons for the agent's real stored memories snapped directly to anatomical gyri
     memories.forEach((mem, idx) => {
@@ -694,6 +772,31 @@ export class AgentMemoryService implements OnModuleInit {
         }
       }
 
+      // Check if this memory is actively engaged by recent activities on trouble threads
+      const isReferencedInAction = recentActivities.some((act) => {
+        const text = (act.content || '').toLowerCase();
+        return (
+          text.includes(mem.title.toLowerCase()) ||
+          (mem.keywords && mem.keywords.some((k) => text.includes(k.toLowerCase())))
+        );
+      });
+
+      const matchedActivity = isReferencedInAction ? recentActivities[0] : null;
+      const isFiringNow = (!isCooling && isReferencedInAction) || (deliberationState === 'DEBATING' && idx < 3);
+
+      const dynamicFrequency = parseFloat(
+        (
+          rateMultiplier *
+          (1.0 + (mem.importanceScore / 10) * 0.5 + (isFiringNow ? 0.8 : 0))
+        ).toFixed(2)
+      );
+
+      const activityLevel = isFiringNow
+        ? 0.95
+        : isCooling
+        ? 0.25
+        : parseFloat((0.4 + (mem.importanceScore / 10) * 0.4).toFixed(2));
+
       nodes.push({
         id: `neuron_mem_${agentCode}_${mem._id}`,
         x: parseFloat(x.toFixed(3)),
@@ -706,10 +809,57 @@ export class AgentMemoryService implements OnModuleInit {
         lobe,
         type: mem.memoryType,
         vectorPreview: generateVectorPreview(mem.title + (mem.keywords?.join('') || '')),
+        isFiringNow,
+        activityLevel,
+        firingFrequency: dynamicFrequency,
+        connectedIssueTitle: matchedActivity ? matchedActivity.issueTitle : undefined,
+        lastFiredTimestamp: (mem as any).lastRecalledAt || (mem as any).createdAt,
       });
     });
 
-    // 2. Anatomical somatic interneurons snapped directly to remaining gyri to form complete cortical network
+    // 2. Dedicated Neurons directly representing live Opinions & Actions across trouble threads
+    recentActivities.slice(0, 6).forEach((act, actIdx) => {
+      const isOp = act.type === 'OPINION';
+      const lobe = isOp ? 'Frontal (Executive)' : 'Temporal (Episodic Memory)';
+      const gList = isOp ? frontalGyri : temporalGyri;
+      let x = 0, y = 0, z = 0;
+      let gyrusLabel = '';
+
+      if (gList.length > 0) {
+        const baseG = gList[actIdx % gList.length];
+        const offset = ((actIdx + 1) * 0.035);
+        x = baseG.x + (actIdx % 2 === 0 ? offset : -offset);
+        y = baseG.y + offset;
+        z = baseG.z;
+        gyrusLabel = baseG.name;
+      } else {
+        const side = actIdx % 2 === 0 ? 1 : -1;
+        x = (isOp ? 0.45 : 0.75) * side;
+        y = isOp ? 1.25 : 0.6;
+        z = isOp ? 0.85 : 0.1;
+        gyrusLabel = `${lobe} Focus`;
+      }
+
+      nodes.push({
+        id: `neuron_act_${agentCode}_${act.id}`,
+        x: parseFloat(x.toFixed(3)),
+        y: parseFloat(y.toFixed(3)),
+        z: parseFloat(z.toFixed(3)),
+        cluster: act.issueTitle || gyrusLabel,
+        intensity: 0.98,
+        label: `${act.type === 'OPINION' ? '⚡ Opinion' : '💬 Debate'}: ${act.issueTitle}`,
+        lobe,
+        type: isOp ? MemoryType.SOLUTION_KNOWLEDGE : MemoryType.EPISODIC,
+        vectorPreview: generateVectorPreview(act.content || act.issueTitle),
+        isFiringNow: !isCooling,
+        activityLevel: !isCooling ? 0.98 : 0.35,
+        firingFrequency: parseFloat((rateMultiplier * 2.2).toFixed(2)),
+        connectedIssueTitle: act.issueTitle,
+        lastFiredTimestamp: act.createdAt,
+      });
+    });
+
+    // 3. Anatomical somatic interneurons snapped directly to remaining gyri to form complete cortical network
     const totalNeuronTarget = Math.max(90, 50 + memoryCount * 5);
     const lobesMeta = [
       { name: 'Frontal (Executive)', type: MemoryType.SOLUTION_KNOWLEDGE, gyri: frontalGyri },
@@ -740,17 +890,25 @@ export class AgentMemoryService implements OnModuleInit {
         gyrusLabel = `${lobeMeta.name} Fold`;
       }
 
+      // Synchronize firing frequency with global deliberation state
+      const isPeriodicFiring = !isCooling && (i % 4 === 0 || deliberationState === 'DEBATING');
+      const interneuronFrequency = parseFloat((rateMultiplier * (0.8 + (i % 5) * 0.25)).toFixed(2));
+      const activityLevel = isCooling ? 0.2 : (deliberationState === 'DEBATING' ? 0.85 : 0.5);
+
       nodes.push({
         id: `neuron_${agentCode}_soma_${i}`,
         x: parseFloat(x.toFixed(3)),
         y: parseFloat(y.toFixed(3)),
         z: parseFloat(z.toFixed(3)),
         cluster: gyrusLabel || `${lobeMeta.name} Network`,
-        intensity: parseFloat((0.45 + Math.random() * 0.5).toFixed(2)),
+        intensity: parseFloat((0.45 + (i % 7) * 0.08).toFixed(2)),
         label: `Synapse #${i + 1} (${gyrusLabel || lobeMeta.name})`,
         lobe: lobeMeta.name,
         type: lobeMeta.type,
         vectorPreview: generateVectorPreview(`${agentCode}_soma_${i}`),
+        isFiringNow: isPeriodicFiring,
+        activityLevel,
+        firingFrequency: interneuronFrequency,
       });
     }
 
